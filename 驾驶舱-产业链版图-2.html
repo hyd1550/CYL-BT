@@ -1,0 +1,2313 @@
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'PingFang SC','Microsoft YaHei',sans-serif;
+  background:
+    radial-gradient(ellipse 1200px 700px at 50% 25%, rgba(23,151,184,.16) 0%, rgba(8,20,42,.0) 60%),
+    linear-gradient(rgba(58,212,255,.05) 1px, transparent 1px) 0 0/60px 60px,
+    linear-gradient(90deg, rgba(58,212,255,.05) 1px, transparent 1px) 0 0/60px 60px,
+    #060c1a;
+  color:#c8d6e5;height:100vh;overflow:hidden;display:flex;flex-direction:column;position:relative}
+body::before{content:"";position:fixed;left:0;right:0;top:0;height:5px;z-index:1000;pointer-events:none;
+  background:linear-gradient(90deg,transparent 0%,#1797b8 30%,#3ad4ff 50%,#1797b8 70%,transparent 100%);opacity:.6}
+body::after{content:"";position:fixed;left:0;right:0;top:5px;height:24px;pointer-events:none;z-index:1000;
+  background:
+    linear-gradient(90deg,rgba(58,212,255,.45) 0,rgba(58,212,255,.45) 80px,transparent 80px) left top/100% 1px no-repeat,
+    linear-gradient(-90deg,rgba(58,212,255,.45) 0,rgba(58,212,255,.45) 80px,transparent 80px) right top/100% 1px no-repeat}
+
+/* ── header ── */
+.hd{display:flex;align-items:center;justify-content:space-between;padding:16px 28px 12px;flex-shrink:0}
+.hd-selector{display:flex;align-items:center;gap:12px}
+.hd-label{font-size:14px;color:#94aabe;letter-spacing:.5px}
+.chain-select{
+  background:linear-gradient(180deg,#0d1a2e,#0a1525);
+  border:1px solid rgba(120,160,200,.25);
+  border-radius:6px;
+  color:#e6eef8;
+  padding:8px 38px 8px 16px;
+  font-size:14px;
+  font-weight:600;
+  font-family:inherit;
+  cursor:pointer;
+  outline:none;
+  appearance:none;
+  -webkit-appearance:none;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1l5 5 5-5' stroke='%2394aabe' stroke-width='1.6' fill='none' stroke-linecap='round'/></svg>");
+  background-repeat:no-repeat;
+  background-position:right 12px center;
+  transition:border-color .15s,box-shadow .15s;
+  min-width:240px;
+}
+.chain-select:hover{border-color:rgba(120,160,200,.5)}
+.chain-select:focus{border-color:#2a9dac;box-shadow:0 0 0 2px rgba(42,157,172,.18)}
+.chain-select option{background:#0d1a2e;color:#e6eef8;padding:8px}
+/* 图谱区内浮动图例（3 色业务覆盖度） */
+.legend{position:absolute;right:18px;bottom:18px;display:flex;flex-direction:column;gap:6px;
+  background:rgba(14,24,42,.96);border:1px solid rgba(120,160,200,.3);border-radius:8px;
+  padding:10px 14px;font-size:11.5px;color:#cfdff0;
+  box-shadow:0 4px 14px rgba(0,0,0,.6);z-index:10;min-width:140px}
+.legend::before{content:"业务覆盖度";display:block;font-weight:700;font-size:12px;color:#94aabe;
+  border-bottom:1px solid rgba(120,160,200,.25);padding-bottom:4px;margin-bottom:2px;letter-spacing:.5px}
+.lg{display:flex;align-items:center;gap:8px;font-size:11.5px;color:#cfdff0;line-height:1.35}
+.lg-d{width:14px;height:9px;border-radius:2px;border:1px solid rgba(255,255,255,.15);flex-shrink:0}
+
+/* view 切换 */
+.view{flex:1;display:flex;flex-direction:column;min-height:0;position:relative}
+.placeholder{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:#5a7a9a}
+.placeholder-title{font-size:22px;font-weight:600;color:#94aabe;letter-spacing:1px}
+.placeholder-sub{font-size:14px;color:#4a6680}
+
+/* ── view2: 降解材料图谱（交互式深色主题，与第一个图谱一致） ── */
+.graph2-wrap{flex:1;overflow:auto;background:linear-gradient(170deg,#0a1628 0%,#0c1a30 50%,#081420 100%);border-radius:0 0 14px 14px;position:relative}
+.graph2-wrap::-webkit-scrollbar{width:10px;height:10px}
+.graph2-wrap::-webkit-scrollbar-thumb{background:rgba(120,140,170,.35);border-radius:5px}
+.graph2-wrap::-webkit-scrollbar-track{background:rgba(0,0,0,.2)}
+.graph2{position:relative;width:3800px;height:11000px}
+.graph2.graph3{width:2400px;height:450px}
+.graph2 svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1}
+/* 屯河覆盖度视图：节点按"现有强链 / 上下游延链 / 短板补链 / 不涉及"着色（沿用原产业链图谱配色） */
+#graph3.coverage-mode .nd2{background:#3a4555 !important;border-color:#5e6a7a !important;color:#cfe2f8 !important}
+#graph3.coverage-mode .nd2.cov-strong{background:linear-gradient(180deg,#a04a18 0%,#bf5f22 100%) !important;border-color:#e68542 !important;color:#fff !important;box-shadow:0 0 8px rgba(190,95,30,.35) !important}
+#graph3.coverage-mode .nd2.cov-extend{background:linear-gradient(180deg,#5d6a12 0%,#788620 100%) !important;border-color:#a8b832 !important;color:#fff !important;box-shadow:0 0 6px rgba(120,134,32,.3) !important}
+#graph3.coverage-mode .nd2.cov-fill{background:linear-gradient(180deg,#0f5e6d 0%,#1a8090 100%) !important;border-color:#4ec0d2 !important;color:#fff !important;box-shadow:0 0 6px rgba(26,128,144,.3) !important}
+#graph3.coverage-mode .nd2.cov-none{background:rgba(58,69,85,.55) !important;border-color:rgba(94,106,122,.5) !important;color:#94a4b8 !important;opacity:.7}
+
+/* 视图模式切换按钮（左上角） */
+.view-toolbar{position:absolute;left:18px;top:18px;display:flex;gap:0;z-index:30;
+  background:rgba(8,22,40,.85);border:1px solid rgba(58,212,255,.3);border-radius:4px;overflow:hidden}
+.view-toolbar .vt-btn{padding:7px 14px;font-size:12px;color:#a8c4e0;cursor:pointer;letter-spacing:.5px;
+  border-right:1px solid rgba(58,212,255,.15);transition:.15s;user-select:none}
+.view-toolbar .vt-btn:last-child{border-right:none}
+.view-toolbar .vt-btn:hover{background:rgba(58,212,255,.12);color:#fff}
+.view-toolbar .vt-btn.active{background:linear-gradient(180deg,#1797b8,#0a6584);color:#fff;font-weight:600}
+
+/* 覆盖度图例（在覆盖度视图下显示） */
+.legend-cov{position:absolute;right:18px;bottom:18px;background:rgba(14,24,42,.96);
+  border:1px solid rgba(120,160,200,.3);border-radius:8px;padding:10px 12px;font-size:11px;color:#cfdff0;
+  box-shadow:0 4px 14px rgba(0,0,0,.6);z-index:10;min-width:140px;display:none}
+.legend-cov-title{font-weight:700;font-size:12px;margin-bottom:6px;color:#94aabe;
+  border-bottom:1px solid rgba(120,160,200,.25);padding-bottom:4px}
+.legend-cov-row{display:flex;align-items:center;gap:8px;padding:3px 0;line-height:1.4}
+.legend-cov-sw{width:14px;height:9px;border-radius:2px;flex-shrink:0;border:1px solid rgba(255,255,255,.15)}
+#view-starch.cov-active .legend-cov{display:block}
+#view-starch.cov-active .legend2{display:none}
+
+/* 总图谱 + 淀粉合成路线：滚轮缩放 + 鼠标拖拽平移，整图初始居中 */
+#graph2-wrap,#graph3-wrap{display:block !important;overflow:hidden !important;position:relative;cursor:grab;user-select:none}
+#graph2-wrap.dragging,#graph3-wrap.dragging{cursor:grabbing}
+#graph2-wrap.dragging *,#graph3-wrap.dragging *{cursor:grabbing !important}
+#graph2,#graph3{position:absolute;left:0;top:0;transform-origin:0 0}
+/* 缩放控件：右下角悬浮按钮 */
+.zoom-ctrl{position:absolute;right:18px;bottom:18px;display:flex;flex-direction:column;gap:4px;z-index:30}
+.zoom-ctrl .zb{width:32px;height:32px;background:rgba(15,40,65,.85);border:1px solid rgba(58,212,255,.35);
+  color:#cfe2f8;font-size:18px;font-weight:600;line-height:1;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;border-radius:3px;transition:.15s;user-select:none}
+.zoom-ctrl .zb:hover{background:rgba(58,212,255,.18);border-color:#3ad4ff;color:#fff}
+.zoom-ctrl .zb-lbl{font-size:10.5px;height:auto;padding:3px 6px;line-height:1.2;background:rgba(8,22,40,.7);
+  border:1px solid rgba(60,160,200,.2);color:#a8c4e0;border-radius:3px;text-align:center;font-weight:400}
+
+/* 节点（深色背景上的彩色块） */
+.nd2{position:absolute;z-index:3;border-radius:4px;padding:4px 8px;font-size:10.5px;font-weight:500;white-space:nowrap;line-height:1.2;display:flex;align-items:center;justify-content:center;text-align:center;border:1px solid rgba(255,255,255,.12);box-shadow:0 1px 3px rgba(0,0,0,.4);cursor:default}
+.nd2.vert{writing-mode:vertical-rl;text-orientation:upright;letter-spacing:2px;padding:8px 4px}
+.nd2.dashed{border-style:dashed;border-width:1.4px}
+.nd2-gray{background:linear-gradient(180deg,#4a5664,#5e6a78);color:#fff;font-weight:600;font-size:12.5px;border-color:#7a8898}
+.nd2-blue{background:linear-gradient(180deg,#2960a8,#3a7ac4);color:#fff;font-weight:600;border-color:#5fa0e0}
+.nd2-orange{background:linear-gradient(180deg,#b85a18,#d2722a);color:#fff;font-weight:600;border-color:#e89042}
+.nd2-yellow{background:linear-gradient(180deg,#8a6c12,#a8841a);color:#fffce0;border-color:#d4a830}
+.nd2-green{background:linear-gradient(180deg,#3a6818,#4d8424);color:#f0ffe0;border-color:#7ab040}
+.nd2-purple{background:linear-gradient(180deg,#4a3a8a,#5e4ca8);color:#fff;border-color:#8a7ad4}
+
+/* 边标签（设备/试剂） */
+.eg-lbl{position:absolute;z-index:2;font-size:9px;color:#7c92a8;line-height:1.25;text-align:center;pointer-events:none;max-width:140px;white-space:normal}
+.eg-lbl .eq{color:#94aabe}
+.eg-lbl .rg{color:#7088a0;font-style:italic}
+
+/* 图例（右下角浮动，深色卡片） */
+.legend2{position:absolute;right:18px;bottom:18px;background:rgba(14,24,42,.96);border:1px solid rgba(120,160,200,.3);border-radius:8px;padding:10px 12px;font-size:11px;color:#cfdff0;box-shadow:0 4px 14px rgba(0,0,0,.6);z-index:10;min-width:170px}
+.legend2-title{font-weight:700;font-size:12px;margin-bottom:6px;color:#94aabe;border-bottom:1px solid rgba(120,160,200,.25);padding-bottom:4px}
+.legend2-row{display:flex;align-items:center;gap:8px;padding:2px 0;line-height:1.4}
+.lgd{width:18px;height:11px;border-radius:2px;flex-shrink:0;border:1px solid rgba(255,255,255,.15)}
+.lgd-gray{background:#5e6a78}
+.lgd-blue{background:#3a7ac4}
+.lgd-orange{background:#d2722a}
+.lgd-yellow{background:#a8841a}
+.lgd-green{background:#4d8424}
+.lgd-purple{background:#5e4ca8}
+.lgd-line{width:18px;height:2px;background:#e0463a;flex-shrink:0}
+.legend2-note{font-size:10px;color:#7a90a8;margin-top:4px;border-top:1px dashed rgba(120,140,170,.25);padding-top:4px}
+
+/* ── main panel ── */
+.panel{flex:1;margin:0 22px 16px;background:linear-gradient(170deg,#0a1628 0%,#0c1a30 50%,#081420 100%);border:1px solid rgba(58,212,255,.22);border-radius:2px;position:relative;overflow:hidden;display:flex;flex-direction:column;
+  box-shadow:0 0 22px rgba(20,60,120,.18) inset, 0 0 8px rgba(58,212,255,.06)}
+/* 四角直角光框 */
+.panel::before{content:"";position:absolute;inset:0;pointer-events:none;z-index:20;
+  background:
+    linear-gradient(#3ad4ff,#3ad4ff) top    left  /18px 2px no-repeat,
+    linear-gradient(#3ad4ff,#3ad4ff) top    left  /2px 18px no-repeat,
+    linear-gradient(#3ad4ff,#3ad4ff) top    right /18px 2px no-repeat,
+    linear-gradient(#3ad4ff,#3ad4ff) top    right /2px 18px no-repeat,
+    linear-gradient(#3ad4ff,#3ad4ff) bottom left  /18px 2px no-repeat,
+    linear-gradient(#3ad4ff,#3ad4ff) bottom left  /2px 18px no-repeat,
+    linear-gradient(#3ad4ff,#3ad4ff) bottom right /18px 2px no-repeat,
+    linear-gradient(#3ad4ff,#3ad4ff) bottom right /2px 18px no-repeat;
+  filter:drop-shadow(0 0 4px rgba(58,212,255,.6))}
+
+.graph-wrap{flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative}
+.graph{position:relative;width:1200px;height:660px;flex-shrink:0}
+.graph svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1}
+
+/* column labels */
+.col-labels{height:40px;display:flex;flex-shrink:0;background:rgba(255,255,255,.012);border-top:1px solid rgba(255,255,255,.04)}
+.cl{flex:none;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:#3e5878;letter-spacing:3px}
+
+/* ── nodes ── */
+.nd{position:absolute;z-index:3;border-radius:5px;padding:6px 12px;font-size:13px;font-weight:600;white-space:nowrap;cursor:pointer;transition:all .15s;line-height:1.2;display:flex;align-items:center;justify-content:center;text-align:center}
+.nd:hover{transform:translateY(-1px);z-index:10;filter:brightness(1.15)}
+
+/* 无填充 - 环节节点 */
+.nd-out{background:rgba(18,28,46,.55);border:1.4px solid #a8bbcc;color:#dee8f2;font-weight:500;padding:5px 11px}
+
+/* 现有产业强链 - 橙色 */
+.nd-strong{background:linear-gradient(180deg,#a04a18 0%,#bf5f22 100%);border:1.4px solid #e68542;color:#ffffff;box-shadow:0 1px 6px rgba(190,95,30,.3)}
+
+/* 上下游延链 - 橄榄绿 */
+.nd-extend{background:linear-gradient(180deg,#5d6a12 0%,#788620 100%);border:1.4px solid #a8b832;color:#ffffff;box-shadow:0 1px 6px rgba(120,134,32,.25)}
+
+/* 短板环节补链 - 青色 */
+.nd-fill{background:linear-gradient(180deg,#0f5e6d 0%,#1a8090 100%);border:1.4px solid #4ec0d2;color:#ffffff;box-shadow:0 1px 6px rgba(26,128,144,.25)}
+
+/* 应用区域 */
+.app-area{position:absolute;border:1.5px dashed rgba(255,255,255,.13);border-radius:12px;display:flex;flex-direction:column;justify-content:space-around;padding:24px 18px;z-index:2;left:1058px;top:22px;bottom:22px;right:8px}
+.app-i{font-size:14px;color:#a8c0d8;display:flex;align-items:center;gap:10px;letter-spacing:.5px}
+.app-i .dot{width:5px;height:5px;border-radius:50%;background:#7290ac;flex-shrink:0}
+
+/* tooltip */
+.tt{position:fixed;z-index:999;background:#101e35;border:1px solid rgba(80,140,200,.22);border-radius:8px;padding:12px 14px;font-size:12px;color:#d0e0f0;max-width:280px;pointer-events:none;display:none;line-height:1.6;box-shadow:0 8px 28px rgba(0,0,0,.5)}
+
+/* nd2 节点改为可点击 */
+.nd2{cursor:pointer !important;transition:transform .15s,filter .15s,box-shadow .15s}
+.nd2:hover{transform:translateY(-1px);filter:brightness(1.2);box-shadow:0 2px 8px rgba(58,212,255,.5);z-index:10}
+
+/* ── 企业列表/详情 弹窗 ── */
+.s-modal{position:fixed;inset:0;background:rgba(2,8,20,.7);backdrop-filter:blur(2px);z-index:9999;
+  opacity:0;pointer-events:none;transition:opacity .25s;display:flex;align-items:center;justify-content:center}
+.s-modal.show{opacity:1;pointer-events:auto}
+.s-modal-pnl{width:1080px;max-width:96%;height:720px;max-height:92%;
+  background:linear-gradient(180deg,#0a1c38 0%,#061226 100%);border:1px solid rgba(58,212,255,.4);border-radius:6px;
+  display:flex;flex-direction:column;position:relative;overflow:hidden;
+  box-shadow:0 20px 50px rgba(0,0,0,.6),0 0 30px rgba(58,212,255,.12)}
+.s-modal-pnl::before{content:"";position:absolute;left:0;top:0;width:100%;height:3px;
+  background:linear-gradient(90deg,transparent,#3ad4ff,transparent)}
+.s-modal-hd{padding:18px 52px 14px 24px;border-bottom:1px solid rgba(80,180,210,.18);flex-shrink:0;
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.s-modal-hd .h1{font-size:18px;font-weight:700;color:#fff;letter-spacing:1px;margin-right:auto}
+.s-modal-hd .tag{display:inline-block;font-size:11.5px;padding:3px 10px;border-radius:2px;letter-spacing:.5px;font-weight:500;
+  border:1px solid rgba(58,212,255,.4);background:rgba(58,212,255,.12);color:#7fc4ff}
+.s-modal-close{position:absolute;right:14px;top:14px;width:30px;height:30px;border-radius:50%;
+  background:rgba(255,255,255,.06);border:1px solid rgba(80,180,210,.3);color:#a8c4e0;
+  font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;z-index:5}
+.s-modal-close:hover{background:rgba(255,80,120,.2);color:#fff;border-color:#ff6b8a}
+.s-modal-body{flex:1;overflow:auto;padding:14px 24px 20px;min-height:0}
+.s-search{display:flex;align-items:center;gap:8px;padding:6px 0 12px;flex-shrink:0;flex-wrap:wrap}
+.s-search input{flex:1;max-width:320px;background:rgba(15,35,65,.6);border:1px solid rgba(60,160,200,.25);
+  border-radius:3px;padding:6px 10px;font-size:12.5px;color:#cfe2f8;outline:none}
+.s-search input:focus{border-color:#3ad4ff;box-shadow:0 0 0 2px rgba(58,212,255,.15)}
+.s-search button{background:linear-gradient(180deg,#1797b8,#0a6584);border:none;color:#fff;padding:6px 22px;border-radius:3px;cursor:pointer;font-size:12.5px;letter-spacing:1px}
+table.s-tbl{width:100%;border-collapse:separate;border-spacing:0;font-size:12.5px;color:#bcd0e8;table-layout:fixed}
+table.s-tbl th{position:sticky;top:0;background:linear-gradient(180deg,#0e2a52,#091833);
+  color:#a8c4e0;font-weight:500;letter-spacing:.5px;font-size:12px;
+  padding:10px 14px;text-align:left;border-bottom:2px solid rgba(58,212,255,.4);white-space:nowrap;z-index:2}
+table.s-tbl td{padding:11px 14px;border-bottom:1px solid rgba(60,160,200,.08);vertical-align:middle;overflow:hidden;text-overflow:ellipsis}
+table.s-tbl tbody tr:nth-child(even){background:rgba(15,55,75,.16)}
+table.s-tbl tbody tr:hover{background:rgba(30,110,140,.22);box-shadow:inset 3px 0 0 #3ad4ff}
+.s-tbl-name{color:#dbeaff;font-weight:600;font-size:13px;line-height:1.4;cursor:pointer;
+  display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;text-overflow:ellipsis;word-break:break-word}
+.s-tbl-name:hover{color:#3ad4ff;text-decoration:underline}
+.s-tbl-no{font-family:'DIN','Consolas',monospace;color:#a8c4e0;font-size:11.5px;letter-spacing:.3px;
+  padding:2px 8px;background:rgba(60,160,200,.08);border:1px solid rgba(60,160,200,.18);border-radius:3px;display:inline-block}
+.s-detail-btn{font-size:11.5px;color:#3ad4ff;cursor:pointer;padding:3px 11px;
+  border:1px solid rgba(58,212,255,.35);background:rgba(58,212,255,.1);border-radius:3px;letter-spacing:.5px;
+  transition:.15s;display:inline-block}
+.s-detail-btn:hover{background:#1797b8;color:#fff;border-color:#1797b8}
+.s-detail-grid{display:grid;grid-template-columns:140px 1fr 140px 1fr;gap:0;
+  border:1px solid rgba(60,160,200,.18);border-radius:4px;overflow:hidden;margin-bottom:18px}
+.s-detail-grid > div{padding:11px 14px;border-bottom:1px solid rgba(60,160,200,.08);font-size:12.5px;line-height:1.55}
+.s-detail-grid > div:nth-child(4n+1),.s-detail-grid > div:nth-child(4n+3){
+  background:rgba(15,55,75,.4);color:#a8c4e0;font-weight:500;letter-spacing:.5px;border-right:1px solid rgba(60,160,200,.08)}
+.s-detail-grid > div:nth-child(4n+2),.s-detail-grid > div:nth-child(4n){color:#dbeaff}
+.s-detail-grid > div:nth-child(4n+2){border-right:1px solid rgba(60,160,200,.08)}
+.s-detail-grid > div:nth-last-child(-n+4){border-bottom:none}
+.s-detail-grid .full{grid-column:1/-1}
+.s-detail-grid > div.full{background:rgba(8,22,45,.5);color:#dbeaff;font-weight:400}
+.s-detail-sect-h{font-size:14px;color:#dbeaff;font-weight:600;letter-spacing:1px;padding-left:10px;
+  border-left:3px solid #3ad4ff;margin-bottom:10px;margin-top:4px}
+.s-pag{display:flex;align-items:center;gap:6px;padding:14px 0 0;font-size:12.5px;color:#7fa3c8;justify-content:flex-end}
+.s-pag .info{margin-right:auto;color:#7fa3c8}
+.s-pag .info b{color:#3ad4ff;font-weight:600;font-family:'DIN','Arial';margin:0 3px}
+.s-pag .pg{display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:28px;padding:0 10px;border-radius:3px;cursor:pointer;
+  background:rgba(15,35,65,.6);border:1px solid rgba(60,160,200,.25);color:#a8c4e0;font-family:'DIN','Arial';font-size:12.5px}
+.s-pag .pg:hover{border-color:#3ad4ff;color:#fff;background:rgba(58,212,255,.12)}
+.s-pag .pg.cur{background:linear-gradient(180deg,#1797b8,#0a6584);color:#fff;border-color:#1797b8;font-weight:600}
+</style>
+
+<div class="hd">
+  <div class="hd-selector">
+    <span class="hd-label">选择产业链</span>
+    <select id="chain-select" class="chain-select">
+      <option value="original" selected>原产业链图谱</option>
+      <option value="degradable">降解材料产业链图谱 — 总图谱</option>
+      <option value="starch">淀粉合成路线</option>
+    </select>
+  </div>
+</div>
+
+<div class="panel">
+  <!-- 视图 1：原产业链图谱（默认） -->
+  <div class="view" id="view-original">
+    <div class="graph-wrap">
+      <div class="graph" id="graph">
+        <svg id="svg">
+          <defs>
+            <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+              <path d="M0,0 L10,5 L0,10 Z" fill="rgba(170,190,210,.45)"/>
+            </marker>
+            <marker id="arr-d" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+              <path d="M0,0 L10,5 L0,10 Z" fill="rgba(170,190,210,.3)"/>
+            </marker>
+          </defs>
+        </svg>
+      </div>
+      <!-- 业务覆盖度图例（右下角浮动） -->
+      <div class="legend">
+        <span class="lg"><span class="lg-d" style="background:#bf5f22"></span>现有产业强链</span>
+        <span class="lg"><span class="lg-d" style="background:#788620"></span>上下游延链</span>
+        <span class="lg"><span class="lg-d" style="background:#1a8090"></span>短板环节补链</span>
+      </div>
+    </div>
+    <div class="col-labels">
+      <div class="cl" style="width:18%">资源</div>
+      <div class="cl" style="width:42%">原料</div>
+      <div class="cl" style="width:25%">产品</div>
+      <div class="cl" style="width:15%">下游应用</div>
+    </div>
+  </div>
+
+  <!-- 视图 2：降解材料产业链图谱 — 总图谱（支持滚轮缩放 + 鼠标拖拽） -->
+  <div class="view" id="view-degradable" style="display:none">
+    <div class="graph2-wrap" id="graph2-wrap">
+      <div class="graph2" id="graph2">
+        <svg id="svg2">
+          <defs>
+            <marker id="arr2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="4" markerHeight="4" orient="auto">
+              <path d="M0,0 L10,5 L0,10 Z" fill="rgba(180,180,180,.6)"/>
+            </marker>
+            <marker id="arr2r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="4" markerHeight="4" orient="auto">
+              <path d="M0,0 L10,5 L0,10 Z" fill="rgba(230,90,80,.7)"/>
+            </marker>
+          </defs>
+        </svg>
+      </div>
+      <!-- 缩放/重置控件 -->
+      <div class="zoom-ctrl">
+        <div class="zb" id="g2ZoomIn" title="放大">＋</div>
+        <div class="zb zb-lbl" id="g2ZoomPct">100%</div>
+        <div class="zb" id="g2ZoomOut" title="缩小">−</div>
+        <div class="zb" id="g2ZoomFit" title="一屏适配 / 居中" style="font-size:14px">⊡</div>
+      </div>
+    </div>
+    <!-- 图例 -->
+    <div class="legend2">
+      <div class="legend2-title">图标说明</div>
+      <div class="legend2-row"><span class="lgd lgd-gray"></span>原材料</div>
+      <div class="legend2-row"><span class="lgd lgd-blue"></span>一级工艺/路线</div>
+      <div class="legend2-row"><span class="lgd lgd-orange"></span>一级产品</div>
+      <div class="legend2-row"><span class="lgd lgd-yellow"></span>后续产品</div>
+      <div class="legend2-row"><span class="lgd lgd-green"></span>具体工艺</div>
+      <div class="legend2-row"><span class="lgd lgd-purple"></span>应用</div>
+      <div class="legend2-row legend2-note"><span class="lgd-line"></span>红色线表示尚未实现产业化</div>
+    </div>
+  </div>
+
+  <!-- 视图 3：淀粉合成路线（从总图谱抽取，支持滚轮缩放 + 鼠标拖拽） -->
+  <div class="view cov-active" id="view-starch" style="display:none">
+    <div class="graph2-wrap" id="graph3-wrap">
+      <div class="graph2 graph3 coverage-mode" id="graph3">
+        <svg id="svg3">
+          <defs>
+            <marker id="arr3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="4" markerHeight="4" orient="auto">
+              <path d="M0,0 L10,5 L0,10 Z" fill="rgba(180,180,180,.6)"/>
+            </marker>
+            <marker id="arr3r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="4" markerHeight="4" orient="auto">
+              <path d="M0,0 L10,5 L0,10 Z" fill="rgba(230,90,80,.7)"/>
+            </marker>
+          </defs>
+        </svg>
+      </div>
+      <!-- 视图模式切换 -->
+      <div class="view-toolbar">
+        <div class="vt-btn active" data-mode="coverage">屯河覆盖度视图</div>
+        <div class="vt-btn" data-mode="process">工艺视图</div>
+      </div>
+      <!-- 缩放/重置控件 -->
+      <div class="zoom-ctrl">
+        <div class="zb" id="g3ZoomIn" title="放大">＋</div>
+        <div class="zb zb-lbl" id="g3ZoomPct">100%</div>
+        <div class="zb" id="g3ZoomOut" title="缩小">−</div>
+        <div class="zb" id="g3ZoomFit" title="一屏适配 / 居中" style="font-size:14px">⊡</div>
+      </div>
+      <!-- 覆盖度图例（仅覆盖度视图显示） -->
+      <div class="legend-cov">
+        <div class="legend-cov-title">屯河覆盖度</div>
+        <div class="legend-cov-row"><span class="legend-cov-sw" style="background:linear-gradient(180deg,#a04a18,#bf5f22)"></span>现有强链</div>
+        <div class="legend-cov-row"><span class="legend-cov-sw" style="background:linear-gradient(180deg,#5d6a12,#788620)"></span>上下游延链</div>
+        <div class="legend-cov-row"><span class="legend-cov-sw" style="background:linear-gradient(180deg,#0f5e6d,#1a8090)"></span>短板补链</div>
+        <div class="legend-cov-row"><span class="legend-cov-sw" style="background:rgba(58,69,85,.55);border-color:rgba(94,106,122,.5)"></span>暂不涉及</div>
+      </div>
+    </div>
+    <!-- 图例（复用总图谱的图例） -->
+    <div class="legend2">
+      <div class="legend2-title">图标说明</div>
+      <div class="legend2-row"><span class="lgd lgd-gray"></span>原材料</div>
+      <div class="legend2-row"><span class="lgd lgd-blue"></span>一级工艺/路线</div>
+      <div class="legend2-row"><span class="lgd lgd-orange"></span>一级产品</div>
+      <div class="legend2-row"><span class="lgd lgd-yellow"></span>后续产品</div>
+      <div class="legend2-row"><span class="lgd lgd-green"></span>具体工艺</div>
+      <div class="legend2-row"><span class="lgd lgd-purple"></span>应用</div>
+      <div class="legend2-row legend2-note"><span class="lgd-line"></span>红色线表示尚未实现产业化</div>
+    </div>
+  </div>
+</div>
+
+<div class="tt" id="tt"></div>
+
+<!-- 在产企业列表 弹窗 -->
+<div class="s-modal" id="compListModal">
+  <div class="s-modal-pnl">
+    <button class="s-modal-close" onclick="closeChainModal('compListModal')">×</button>
+    <div class="s-modal-hd"><div class="h1" id="compListTitle">在产企业列表</div><span class="tag" id="compListTag"></span></div>
+    <div class="s-modal-body" id="compListBody"></div>
+  </div>
+</div>
+<!-- 企业详情 弹窗 -->
+<div class="s-modal" id="compDetailModal">
+  <div class="s-modal-pnl">
+    <button class="s-modal-close" onclick="closeChainModal('compDetailModal')">×</button>
+    <div class="s-modal-hd"><div class="h1" id="compDetailTitle">企业详情</div></div>
+    <div class="s-modal-body" id="compDetailBody"></div>
+  </div>
+</div>
+
+<script>
+function openChainModal(id){document.getElementById(id).classList.add('show')}
+function closeChainModal(id){document.getElementById(id).classList.remove('show')}
+document.querySelectorAll('.s-modal').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)closeChainModal(m.id)}));
+
+// ══════════════ 节点 → 在产企业 mock 生成 ══════════════
+const COMP_PREFIXES = ['新疆','山东','江苏','浙江','广东','上海','北京','安徽','河南','湖北','福建','四川','辽宁','天津','河北','陕西','内蒙古','宁夏','甘肃'];
+const COMP_SUFFIXES = ['化工股份有限公司','新材料股份有限公司','降解科技有限公司','聚酯科技有限公司','可降解材料有限公司','环保新材有限公司','生物材料股份有限公司','石化集团','化纤股份有限公司','新材集团'];
+const COMP_BRAND = ['蓝山屯河','金发','万华','中科金龙','丰原','蓝晶微生物','三菱','NatureWorks','Perstorp','华峰','沙隆达','吉化','天辰','广州盛和','安徽劲旋风','南京聚鑫','嘉化','龙佰','建滔','中石化'];
+const CITIES = {'新疆':['昌吉','乌鲁木齐','石河子'],'山东':['济南','青岛','烟台','潍坊','淄博'],'江苏':['南京','苏州','无锡','常州','南通'],'浙江':['杭州','宁波','嘉兴','台州'],'广东':['广州','深圳','东莞','佛山'],'上海':['浦东','金山','宝山'],'北京':['海淀','朝阳','顺义'],'安徽':['合肥','蚌埠','芜湖'],'河南':['郑州','洛阳','开封'],'湖北':['武汉','宜昌','襄阳'],'福建':['厦门','福州','泉州'],'四川':['成都','德阳','宜宾'],'辽宁':['沈阳','大连','营口'],'天津':['滨海','武清'],'河北':['石家庄','沧州','邯郸'],'陕西':['西安','榆林','咸阳'],'内蒙古':['呼和浩特','包头','鄂尔多斯'],'宁夏':['银川','石嘴山'],'甘肃':['兰州','酒泉']};
+const STREETS = ['工业园区','经济开发区','化工园区','高新技术开发区','产业基地','科技园'];
+const CAP_OPTS = [3000,5000,8000,10000,12000,15000,20000,30000,50000,80000,100000];
+const STATUS_OPTS = [{l:'存续（在营、开业、在册）',c:'#42d29a'},{l:'存续（在营、开业、在册）',c:'#42d29a'},{l:'存续（在营、开业、在册）',c:'#42d29a'},{l:'迁出',c:'#fcd34d'}];
+const TYPES = ['有限责任公司','股份有限公司','有限责任公司（中外合资）','有限责任公司（自然人投资或控股）'];
+const INDUSTRIES = ['化学原料和化学制品制造业','橡胶和塑料制品业','合成材料制造','生物降解新材料制造','研究和试验发展'];
+const EMPS = ['10-50 人','50-200 人','200-500 人','500-1000 人','1000 人以上'];
+const LEGAL_PERSONS = ['张明华','李伟强','王建国','刘志刚','陈彦军','赵宏伟','黄少华','周泽昊','吴俊杰','徐海峰'];
+
+function rnd(seed,k){let h=2166136261;for(let i=0;i<seed.length;i++){h^=seed.charCodeAt(i);h=Math.imul(h,16777619)}h=Math.imul(h^k,2654435761);return ((h>>>0)/4294967295)}
+
+function genCompForNode(nodeId, nodeName){
+  const seed = nodeId + '|' + nodeName;
+  const baseCount = 8 + Math.floor(rnd(seed,1)*15);  // 8 ~ 22
+  const list = [];
+  for (let i=0; i<baseCount; i++){
+    const provIdx = Math.floor(rnd(seed,i*7+2)*COMP_PREFIXES.length);
+    const prov = COMP_PREFIXES[provIdx];
+    const cities = CITIES[prov]||[prov];
+    const city = cities[Math.floor(rnd(seed,i*7+3)*cities.length)];
+    const brand = COMP_BRAND[Math.floor(rnd(seed,i*7+4)*COMP_BRAND.length)];
+    const suf = COMP_SUFFIXES[i%COMP_SUFFIXES.length];
+    const compName = brand + suf;
+    const cap = CAP_OPTS[Math.floor(rnd(seed,i*7+5)*CAP_OPTS.length)];
+    const founded = (1995 + Math.floor(rnd(seed,i*7+6)*28)) + '-' + String(Math.floor(rnd(seed,i*7+7)*12)+1).padStart(2,'0') + '-' + String(Math.floor(rnd(seed,i*7+8)*28)+1).padStart(2,'0');
+    const tax = '91' + (Math.floor(rnd(seed,i*7+9)*9999999999999999)).toString().slice(0,15);
+    const street = STREETS[Math.floor(rnd(seed,i*7+10)*STREETS.length)];
+    const no = Math.floor(rnd(seed,i*7+11)*888)+1;
+    const address = prov + (prov.length<=2?'省':'') + city + '市' + street + no + '号';
+    const legalPerson = LEGAL_PERSONS[Math.floor(rnd(seed,i*7+12)*LEGAL_PERSONS.length)];
+    const compType = TYPES[Math.floor(rnd(seed,i*7+13)*TYPES.length)];
+    const industry = INDUSTRIES[Math.floor(rnd(seed,i*7+14)*INDUSTRIES.length)];
+    const emp = EMPS[Math.floor(rnd(seed,i*7+15)*EMPS.length)];
+    const status = STATUS_OPTS[Math.floor(rnd(seed,i*7+16)*STATUS_OPTS.length)];
+    const phone = '0' + (Math.floor(rnd(seed,i*7+17)*900)+100) + '-' + (Math.floor(rnd(seed,i*7+18)*90000000)+10000000);
+    const email = 'contact'+Math.floor(rnd(seed,i*7+19)*999)+'@'+brand.toLowerCase().replace(/[^a-z0-9]/g,'')+'.com.cn';
+    const website = 'www.'+brand.toLowerCase().replace(/[^a-z0-9]/g,'')+'.com.cn';
+    const products = nodeName + (i%3===0 ? '、' + (nodeName==='PBAT'?'PLA':nodeName==='PLA'?'PBAT':'其他可降解材料') : '');
+    list.push({
+      name: compName, prov, city, address, cap, founded, tax, legalPerson, compType, industry, emp, status,
+      phone, email, website, products, scope: '生物降解新材料的研发、生产与销售；'+products+'等高分子材料及其制品的制造、加工；化工产品技术开发、技术咨询、技术转让；货物及技术进出口业务（不含国家禁止或限制的项目）。'
+    });
+  }
+  list.sort((a,b)=>b.cap-a.cap);
+  return list;
+}
+
+function openChainCompList(nodeId, nodeName){
+  const list = genCompForNode(nodeId, nodeName);
+  document.getElementById('compListTitle').textContent = nodeName + ' — 在产企业列表';
+  document.getElementById('compListTag').textContent = '共 ' + list.length + ' 家在产企业';
+  const PAGE = 10;
+  let cur = 1, kw = '';
+  function render(){
+    const filtered = kw ? list.filter(c=>c.name.indexOf(kw)>=0||c.prov.indexOf(kw)>=0) : list;
+    const total = filtered.length, pages = Math.max(1, Math.ceil(total/PAGE));
+    if (cur>pages) cur=pages;
+    const slice = filtered.slice((cur-1)*PAGE, cur*PAGE);
+    document.getElementById('compListBody').innerHTML =
+      '<div class="s-search"><input id="compKw" placeholder="按企业名称 / 省份搜索" value="'+kw+'"/><button>查询</button></div>'+
+      '<table class="s-tbl">'+
+        '<thead><tr>'+
+          '<th style="width:50px;text-align:center">序号</th>'+
+          '<th style="width:26%">企业名称</th>'+
+          '<th style="width:9%">所在省</th>'+
+          '<th style="width:25%">主营产品</th>'+
+          '<th style="width:10%;text-align:right">注册资本</th>'+
+          '<th style="width:21%">注册地址</th>'+
+          '<th style="width:9%;text-align:center">操作</th>'+
+        '</tr></thead><tbody>'+
+        (slice.length ? slice.map((c,i)=>(
+          '<tr>'+
+            '<td style="text-align:center;color:#7fa3c8;font-family:DIN,Arial">'+String((cur-1)*PAGE+i+1).padStart(2,'0')+'</td>'+
+            '<td><span class="s-tbl-name" data-idx="'+filtered.indexOf(c)+'">'+c.name+'</span></td>'+
+            '<td style="color:#a8c4e0">'+c.prov+'</td>'+
+            '<td style="color:#bcd0e8;overflow:hidden;text-overflow:ellipsis" title="'+c.products+'">'+c.products+'</td>'+
+            '<td style="text-align:right;color:#3ad4ff;font-family:DIN,Arial;font-weight:700">'+c.cap.toLocaleString()+' <span style="color:#7fa3c8;font-weight:400;font-family:PingFang SC">万元</span></td>'+
+            '<td style="color:#a8c4e0;overflow:hidden;text-overflow:ellipsis" title="'+c.address+'">'+c.address+'</td>'+
+            '<td style="text-align:center"><span class="s-detail-btn" data-idx="'+filtered.indexOf(c)+'">详情</span></td>'+
+          '</tr>'
+        )).join('') : '<tr><td colspan="7" style="text-align:center;color:#5e85b0;padding:60px 0">⌕  未找到匹配的企业</td></tr>')+
+        '</tbody></table>'+
+      '<div class="s-pag">'+
+        '<span class="info">共 <b>'+total+'</b> 家 · 第 <b>'+cur+'</b> / '+pages+' 页</span>'+
+        '<span class="pg" data-go="'+(cur-1)+'"'+(cur<=1?' style="opacity:.4;pointer-events:none"':'')+'>上一页</span>'+
+        Array.from({length:Math.min(pages,5)},(_,k)=>{const p=k+1;return '<span class="pg'+(p===cur?' cur':'')+'" data-go="'+p+'">'+p+'</span>'}).join('')+
+        '<span class="pg" data-go="'+(cur+1)+'"'+(cur>=pages?' style="opacity:.4;pointer-events:none"':'')+'>下一页</span>'+
+      '</div>';
+    document.querySelectorAll('#compListBody .s-tbl-name, #compListBody .s-detail-btn').forEach(el=>el.addEventListener('click',()=>{
+      const c = filtered[parseInt(el.dataset.idx)];
+      if (c) openChainCompDetail(c, nodeName);
+    }));
+    document.querySelectorAll('#compListBody .s-pag .pg').forEach(p=>p.addEventListener('click',()=>{
+      const g = parseInt(p.dataset.go); if (!isNaN(g)&&g>=1&&g<=pages){cur=g;render()}
+    }));
+    const kwEl = document.getElementById('compKw');
+    if (kwEl) kwEl.addEventListener('input',e=>{kw=e.target.value.trim();cur=1;render()});
+  }
+  render();
+  openChainModal('compListModal');
+}
+
+function openChainCompDetail(c, nodeName){
+  document.getElementById('compDetailTitle').textContent = '企业详情 — ' + c.name;
+  document.getElementById('compDetailBody').innerHTML =
+    '<div class="s-detail-sect-h">基本信息（工商登记）</div>'+
+    '<div class="s-detail-grid">'+
+      '<div>企业名称</div><div style="color:#fff;font-weight:600">'+c.name+'</div>'+
+      '<div>统一社会信用代码</div><div><span class="s-tbl-no">'+c.tax+'</span></div>'+
+      '<div>法定代表人</div><div>'+c.legalPerson+'</div>'+
+      '<div>注册资本</div><div><span style="color:#3ad4ff;font-family:DIN,Arial;font-weight:700">'+c.cap.toLocaleString()+'</span> 万元</div>'+
+      '<div>成立日期</div><div>'+c.founded+'</div>'+
+      '<div>登记状态</div><div><span style="color:'+c.status.c+'">'+c.status.l+'</span></div>'+
+      '<div>企业类型</div><div>'+c.compType+'</div>'+
+      '<div>所属行业</div><div>'+c.industry+'</div>'+
+      '<div>所属地区</div><div>'+c.prov+' '+c.city+'</div>'+
+      '<div>人员规模</div><div>'+c.emp+'</div>'+
+      '<div>营业期限</div><div>'+c.founded+' 至 长期</div>'+
+      '<div>所属产业链</div><div>降解材料产业链 · '+nodeName+' 节点</div>'+
+      '<div>联系电话</div><div>'+c.phone+'</div>'+
+      '<div>电子邮箱</div><div>'+c.email+'</div>'+
+      '<div>企业官网</div><div><a href="javascript:void(0)" style="color:#3ad4ff">'+c.website+'</a></div>'+
+      '<div>纳税人识别号</div><div><span class="s-tbl-no">'+c.tax+'</span></div>'+
+      '<div class="full">注册地址</div><div class="full" style="color:#dbeaff">'+c.address+'</div>'+
+      '<div class="full">主营产品</div><div class="full" style="color:#dbeaff;font-weight:500">'+c.products+'</div>'+
+      '<div class="full">经营范围</div><div class="full" style="color:#dbeaff;line-height:1.7">'+c.scope+'</div>'+
+    '</div>';
+  openChainModal('compDetailModal');
+}
+
+
+/* ════════════════════════════════════════════════
+   严格按 蓝山屯河产业链图谱.jpg 逐节点逐连线复刻
+   画布 1200 × 660
+════════════════════════════════════════════════ */
+const N = [
+  /* ── 资源列 ── */
+  {id:'corn',     n:'玉米/秸秆等',  x:30,  y:90,  w:108, c:'nd-out',    d:'农业生物质资源，发酵生产葡萄糖。'},
+  {id:'green_e',  n:'绿电',         x:55,  y:282, w:60,  c:'nd-fill',   d:'风电/光伏等清洁电力，电解水制氢。'},
+  {id:'coal',     n:'煤炭',         x:55,  y:392, w:60,  c:'nd-fill',   d:'煤化工路线基础原料，短板补链方向。'},
+  {id:'limestone',n:'石灰石',       x:50,  y:470, w:70,  c:'nd-fill',   d:'矿产资源，用于电石炉气与电石路线。'},
+  {id:'coke',     n:'焦/兰炭',      x:40,  y:540, w:84,  c:'nd-out',    d:'碳质原料，与石灰石反应生成电石。'},
+
+  /* ── 原料列 / 生物路线 ── */
+  {id:'glucose',  n:'葡萄糖',       x:235, y:90,  w:64,  c:'nd-fill',   d:'生物质发酵产物，多种生物基化学品的原料。'},
+  {id:'bio_aa',   n:'生物基已二酸', x:370, y:60,  w:124, c:'nd-fill',   d:'由葡萄糖发酵制得，PBS类聚酯合成关键原料。'},
+  {id:'bio_sa',   n:'生物基丁二酸', x:370, y:132, w:124, c:'nd-fill',   d:'由葡萄糖发酵制得，用于PBS类聚酯合成。'},
+  {id:'fdca',     n:'FDCA',         x:390, y:200, w:62,  c:'nd-out',    d:'呋喃二甲酸，葡萄糖经HMF氧化制得。'},
+  {id:'pef',      n:'PEF',          x:494, y:200, w:54,  c:'nd-out',    d:'聚呋喃二甲酸乙二醇酯，新型生物基材料。'},
+  {id:'pda',      n:'戊二胺',       x:388, y:258, w:64,  c:'nd-out',    d:'葡萄糖发酵产物，聚酰胺单体。'},
+  {id:'pa',       n:'聚酰胺',       x:494, y:258, w:64,  c:'nd-extend', d:'生物基尼龙，高性能工程塑料。'},
+
+  /* ── 原料列 / 氢气路线 ── */
+  {id:'h2_proc',  n:'电解水制氢',   x:230, y:282, w:108, c:'nd-out',    d:'绿电电解水制氢工艺。'},
+
+  /* ── 原料列 / 煤化工 ── */
+  {id:'gasify',   n:'煤气化',       x:200, y:392, w:64,  c:'nd-out',    d:'煤炭气化工艺，产出合成气。'},
+  {id:'syngas',   n:'合成气',       x:300, y:392, w:64,  c:'nd-out',    d:'CO+H₂混合气，甲醇合成原料。'},
+  {id:'methanol', n:'甲醇',         x:400, y:392, w:54,  c:'nd-fill',   d:'煤化工核心品，醋酐、甲醛、醋酸的原料。'},
+
+  /* ── 原料列 / 电石路线 ── */
+  {id:'elec',     n:'电',           x:215, y:454, w:40,  c:'nd-out',    d:'电力驱动电石炉。'},
+  {id:'furnace',  n:'电石炉气',     x:288, y:454, w:88,  c:'nd-out',    d:'电石炉副产气体，可参与合成气路线。'},
+  {id:'calcium',  n:'电石',         x:210, y:540, w:50,  c:'nd-out',    d:'焦/兰炭与石灰石产物，水解生成乙炔。'},
+  {id:'acetylene',n:'乙炔',         x:305, y:540, w:50,  c:'nd-out',    d:'电石水解产物，BDO Reppe法关键中间体。'},
+
+  /* ── 原料列 / 甲醇下游 + 氢气 ── */
+  {id:'acetic_a', n:'醋酐',         x:495, y:348, w:60,  c:'nd-extend', d:'甲醇羰基化产物，BDO产业链延链。'},
+  {id:'formald',  n:'甲醛',         x:495, y:392, w:60,  c:'nd-extend', d:'甲醇氧化脱氢产物，POM及BDO原料。'},
+  {id:'hydrogen', n:'氢气',         x:495, y:436, w:60,  c:'nd-extend', d:'电解水或电石炉气副产，BDO加氢合成。'},
+  {id:'pom',      n:'POM',          x:495, y:486, w:60,  c:'nd-extend', d:'聚甲醛，工程塑料，汽车/电子电器应用。'},
+  {id:'acetic',   n:'醋酸',         x:495, y:580, w:60,  c:'nd-extend', d:'甲醇羰基化产物，基础化工品。'},
+
+  /* ── 产品列 / BDO 双节点 ── */
+  {id:'bdo_top',  n:'BDO',          x:608, y:200, w:64,  c:'nd-strong', d:'1,4-丁二醇，PBS类聚酯合成枢纽（此处展示）。'},
+  {id:'bdo_main', n:'BDO',          x:608, y:436, w:64,  c:'nd-strong', d:'1,4-丁二醇，蓝山屯河现有产业强链核心枢纽。'},
+
+  /* ── 产品列 / PBS 链 ── */
+  {id:'pbs',      n:'PBS类聚酯',    x:720, y:96, w:104, c:'nd-strong', d:'PBS/PBSA/PBAT可降解聚酯系列。'},
+  {id:'aa_sa',    n:'AA/SA',        x:858, y:60,  w:68,  c:'nd-out',    d:'己二酸(AA)和丁二酸(SA)，PBS单体。'},
+  {id:'pbs_mod',  n:'改性',         x:858, y:132, w:62,  c:'nd-strong', d:'PBS类聚酯改性，提升力学和加工性能。'},
+
+  /* ── 产品列 / PTMEG 链 ── */
+  {id:'ptmeg',    n:'PTMEG',        x:720, y:348, w:80,  c:'nd-strong', d:'聚四氢呋喃，BDO脱水环化聚合，氨纶原料。'},
+  {id:'spandex',  n:'氨纶',         x:858, y:348, w:62,  c:'nd-extend', d:'弹性纤维，PTMEG与MDI聚合。'},
+
+  /* ── 产品列 / TPEE 链 ── */
+  {id:'tpee',     n:'TPEE',         x:725, y:392, w:70,  c:'nd-strong', d:'热塑性聚酯弹性体，汽车/电子应用。'},
+  {id:'tpee_mod', n:'改性',         x:858, y:392, w:62,  c:'nd-extend', d:'TPEE改性，提升耐热耐油等特性。'},
+
+  /* ── 产品列 / TPU ── */
+  {id:'tpu',      n:'TPU',          x:858, y:436, w:62,  c:'nd-extend', d:'热塑性聚氨酯，弹性耐磨。'},
+
+  /* ── 产品列 / PBT 链 ── */
+  {id:'pbt',      n:'PBT',          x:730, y:486, w:60,  c:'nd-strong', d:'聚对苯二甲酸丁二醇酯，PTA与BDO缩聚。'},
+  {id:'pbt_mod',  n:'改性',         x:858, y:486, w:62,  c:'nd-strong', d:'PBT玻纤增强、阻燃改性。'},
+
+  /* ── 产品列 / PTA · PET · PCT/PETG（PET、PCT/PETG 与 PBT 同列） ── */
+  {id:'pta',      n:'PTA',          x:615, y:540, w:50,  c:'nd-fill',   d:'对苯二甲酸，PBT/PET关键单体。'},
+  {id:'pet',      n:'PET',          x:735, y:540, w:60,  c:'nd-strong', d:'聚对苯二甲酸乙二醇酯，最大聚酯品种。'},
+  {id:'pctg',     n:'PCT/PETG',     x:720, y:610, w:96,  c:'nd-out',    d:'特种聚酯，光缆/医疗高端应用。'},
+];
+
+/* 第 4 位：路由 hint  'h'/'v'/undefined(自动)
+   第 5 位：折点 override，h-routing 指折点 x，v-routing 指折点 y */
+const L = [
+  /* 生物路线 */
+  ['corn','glucose','s'],
+  ['glucose','bio_aa','s'],
+  ['glucose','bio_sa','s'],
+  ['glucose','fdca','s','h'],       /* 强制水平折线，避免 v 路由穿过 bio_sa */
+  ['glucose','pda','s','h'],         /* 同上 */
+  ['fdca','pef','s'],
+  ['bdo_top','pef','s','h'],         /* BDO → PEF（同水平线，反向进入 PEF 右侧） */
+  ['bio_aa','pef','d','v',100],      /* 生物基已二酸 → PEF（虚线，折点 y=100 走 bio_sa 上方，再在 x=521 下垂到 PEF 顶部） */
+  ['pda','pa','s'],
+
+  /* PBS 路线 */
+  ['bio_aa','pbs','s'],
+  ['bio_sa','pbs','s'],
+  ['aa_sa','pbs','s','v'],          /* AA/SA 自上方下来进入 PBS 顶部 */
+  ['bdo_top','pbs','s','v'],        /* BDO_top 自下方向上进入 PBS 底部 */
+  ['glucose','bdo_top','s','v',170], /* 葡萄糖→BDO（实线，从上方进入 BDO_top，避开 PEF/BDO 之间 y=212 那条横线） */
+  ['pbs','pbs_mod','s'],
+  ['pbs','ptmeg','s'],               /* PBS类聚酯→PTMEG */
+
+  /* 电解水制氢路线 — 直接到甲醇和 BDO */
+  ['green_e','h2_proc','s'],
+  ['h2_proc','methanol','s','h',385],   /* 折点贴近甲醇，水平段长 */
+  ['h2_proc','bdo_main','s','h',593],   /* 折点与其他 BDO 输入对齐 */
+
+  /* 煤化工路线 */
+  ['coal','gasify','s'],
+  ['gasify','syngas','s'],
+  ['syngas','methanol','s'],
+  ['methanol','acetic_a','s'],
+  ['methanol','formald','s'],
+  ['methanol','acetic','s','h'],
+  ['methanol','pom','s','h'],         /* 甲醇→POM（直接） */
+
+  /* 醋酐/甲醛/氢气 → BDO_main：所有输入折点统一在 x=593，进入 BDO_main 左侧 */
+  ['acetic_a','bdo_main','s','h',593],
+  ['formald','bdo_main','s','h',593],
+  ['hydrogen','bdo_main','s'],   /* 同一水平线，直线即可 */
+
+  /* 煤炭/石灰石/电石路线 */
+  ['coal','elec','s'],              /* 煤炭→电 */
+  ['elec','calcium','s'],            /* 电→电石 */
+  ['limestone','calcium','s'],
+  ['coke','calcium','s'],
+  ['calcium','furnace','s'],         /* 电石→电石炉气（电石炉副产气） */
+  ['calcium','acetylene','s'],       /* 电石→乙炔 */
+  ['furnace','syngas','s'],          /* 电石炉气→合成气 */
+  /* 乙炔→BDO：折点 x=593 紧邻 BDO_main 左侧，避开氢气/POM/醋酸 */
+  ['acetylene','bdo_main','s','h',593],
+
+  /* BDO 下游 */
+  ['bdo_main','ptmeg','s'],
+  ['ptmeg','spandex','s'],
+  ['bdo_main','tpee','s'],
+  ['tpee','tpee_mod','s'],
+  ['bdo_main','tpu','s'],
+  ['bdo_main','pbt','s'],
+  ['pbt','pbt_mod','s'],
+
+  /* PTA 路线 */
+  ['pta','pbt','s','h'],     /* 强制水平折线，走干净的右-上 L 形 */
+  ['pta','pet','s'],          /* 同 y，直线 */
+  ['pta','pctg','s','h'],    /* 右-下 L 形 */
+];
+
+const APPS = ['汽车','电子电器','光缆','医疗卫生','包装','农膜','交通'];
+/* 末端节点连接到应用区域虚线 */
+const APP_LINKS = ['pbs_mod','pa','spandex','tpee_mod','tpu','pbt_mod','pet','pctg','pom','acetic'];
+
+const nMap = {};
+
+function init(){
+  const g = document.getElementById('graph');
+  const svg = document.getElementById('svg');
+
+  // 自适应缩放
+  const wrap = g.parentElement;
+  const sx = wrap.clientWidth / 1200, sy = wrap.clientHeight / 660;
+  const s = Math.min(sx, sy, 1.25);
+  g.style.transform = `scale(${s})`;
+  g.style.transformOrigin = 'center center';
+
+  // 节点
+  N.forEach(nd => {
+    const el = document.createElement('div');
+    el.className = 'nd ' + nd.c;
+    el.textContent = nd.n;
+    el.style.left = nd.x + 'px';
+    el.style.top = nd.y + 'px';
+    if (nd.w) el.style.width = nd.w + 'px';
+    el.dataset.info = JSON.stringify(nd);
+    el.dataset.id = nd.id;
+    el.dataset.name = nd.n;
+    // hover 显示节点说明，click 打开在产企业列表
+    el.onmouseenter = function(){ showTip(this) };
+    el.onmouseleave = function(){ document.getElementById('tt').style.display = 'none' };
+    el.onclick = function(){ openChainCompList(this.dataset.id, this.dataset.name) };
+    g.appendChild(el);
+    nMap[nd.id] = { el, d: nd };
+  });
+
+  // 应用区域
+  const ab = document.createElement('div');
+  ab.className = 'app-area';
+  ab.innerHTML = APPS.map(a => `<div class="app-i"><span class="dot"></span>${a}</div>`).join('');
+  g.appendChild(ab);
+
+  requestAnimationFrame(() => drawLinks(svg, g));
+}
+
+function drawLinks(svg, g){
+  const gR = g.getBoundingClientRect();
+  let p = '';
+  const s = getScale();
+
+  L.forEach(link => {
+    const fi = link[0], ti = link[1], type = link[2], hint = link[3], bendOv = link[4];
+    const f = nMap[fi], t = nMap[ti];
+    if (!f || !t) return;
+    const fR = f.el.getBoundingClientRect();
+    const tR = t.el.getBoundingClientRect();
+    const fx = (fR.left - gR.left) / s, fy = (fR.top - gR.top) / s;
+    const fw = fR.width / s, fh = fR.height / s;
+    const tx = (tR.left - gR.left) / s, ty = (tR.top - gR.top) / s;
+    const tw = tR.width / s, th = tR.height / s;
+
+    const fcx = fx + fw/2, fcy = fy + fh/2;
+    const tcx = tx + tw/2, tcy = ty + th/2;
+    const dxAbs = Math.abs(tcx - fcx), dyAbs = Math.abs(tcy - fcy);
+
+    const xOverlap = !(fx + fw <= tx || tx + tw <= fx);
+    const yOverlap = !(fy + fh <= ty || ty + th <= fy);
+
+    let routing = hint;
+    if (!routing) {
+      if (yOverlap)      routing = 'h';
+      else if (xOverlap) routing = 'v';
+      else               routing = (dxAbs >= dyAbs) ? 'h' : 'v';
+    }
+
+    let col, w;
+    const tc = t.d.c;
+    if (tc === 'nd-strong')      { col = 'rgba(230,150,70,.5)';   w = 1.4; }
+    else if (tc === 'nd-extend') { col = 'rgba(190,210,90,.42)';  w = 1.3; }
+    else if (tc === 'nd-fill')   { col = 'rgba(90,190,210,.42)';  w = 1.3; }
+    else                          { col = 'rgba(180,200,220,.3)'; w = 1.2; }
+
+    let pathD;
+    if (routing === 'h') {
+      let x1, y1, x2, y2;
+      if (tcx >= fcx) { x1 = fx + fw; y1 = fcy; x2 = tx;       y2 = tcy; }
+      else            { x1 = fx;       y1 = fcy; x2 = tx + tw; y2 = tcy; }
+      if (Math.abs(y2 - y1) < 1.5) {
+        pathD = `M${x1},${y1} L${x2},${y2}`;
+      } else {
+        const mx = (bendOv != null) ? bendOv : (x1 + x2) / 2;
+        pathD = `M${x1},${y1} L${mx},${y1} L${mx},${y2} L${x2},${y2}`;
+      }
+    } else {
+      let x1, y1, x2, y2;
+      if (tcy >= fcy) { x1 = fcx; y1 = fy + fh; x2 = tcx; y2 = ty; }
+      else            { x1 = fcx; y1 = fy;       x2 = tcx; y2 = ty + th; }
+      if (Math.abs(x2 - x1) < 1.5) {
+        pathD = `M${x1},${y1} L${x2},${y2}`;
+      } else {
+        const my = (bendOv != null) ? bendOv : (y1 + y2) / 2;
+        pathD = `M${x1},${y1} L${x1},${my} L${x2},${my} L${x2},${y2}`;
+      }
+    }
+
+    const dash = (type === 'd') ? ' stroke-dasharray="5 4"' : '';
+    const marker = (type === 'd') ? ' marker-end="url(#arr-d)"' : ' marker-end="url(#arr)"';
+    p += `<path d="${pathD}" fill="none" stroke="${col}" stroke-width="${w}" stroke-linejoin="miter"${dash}${marker}/>`;
+  });
+
+  // 末端节点 → 应用区域 虚线
+  APP_LINKS.forEach(id => {
+    const nd = nMap[id];
+    if (!nd) return;
+    const fR = nd.el.getBoundingClientRect();
+    const x1 = (fR.right - gR.left) / s;
+    const y1 = (fR.top + fR.height/2 - gR.top) / s;
+    p += `<path d="M${x1},${y1} L1055,${y1}" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="1" stroke-dasharray="4 3"/>`;
+  });
+
+  svg.innerHTML = svg.querySelector('defs').outerHTML + p;
+}
+
+function getScale(){
+  const g = document.getElementById('graph');
+  const t = getComputedStyle(g).transform;
+  if (t === 'none') return 1;
+  const m = t.match(/matrix\(([^)]+)\)/);
+  return m ? parseFloat(m[1].split(',')[0]) : 1;
+}
+
+function showTip(el){
+  const d = JSON.parse(el.dataset.info);
+  const cm = {
+    'nd-strong': { l: '现有产业强链', c: '#f59e3a' },
+    'nd-extend': { l: '上下游延链',   c: '#bef264' },
+    'nd-fill':   { l: '短板环节补链', c: '#67e8f9' },
+    'nd-out':    { l: '环节节点',     c: '#cbd5e1' }
+  };
+  const cfg = cm[d.c] || { l: '', c: '#aaa' };
+  const tt = document.getElementById('tt');
+  tt.innerHTML = `
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+      <span style="width:8px;height:8px;border-radius:2px;background:${cfg.c};display:inline-block"></span>
+      <span style="font-size:10px;color:#4a7a9a">${cfg.l}</span>
+    </div>
+    <div style="font-size:13px;font-weight:700;color:${cfg.c};margin-bottom:6px">${d.n}</div>
+    <div style="font-size:11.5px;color:#a0b8d0;line-height:1.65">${d.d}</div>
+  `;
+  tt.style.display = 'block';
+  const r = el.getBoundingClientRect();
+  tt.style.left = Math.min(r.right + 10, window.innerWidth - 300) + 'px';
+  tt.style.top = Math.max(r.top - 15, 8) + 'px';
+}
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('.nd')) document.getElementById('tt').style.display = 'none';
+});
+
+window.addEventListener('resize', () => {
+  if (document.getElementById('view-original').style.display === 'none') return;
+  const g = document.getElementById('graph');
+  g.querySelectorAll('.nd, .app-area').forEach(e => e.remove());
+  Object.keys(nMap).forEach(k => delete nMap[k]);
+  const svg = document.getElementById('svg');
+  svg.innerHTML = svg.querySelector('defs').outerHTML;
+  init();
+});
+
+/* 产业链切换 */
+document.getElementById('chain-select').addEventListener('change', e => {
+  const v = e.target.value;
+  const vOrig = document.getElementById('view-original');
+  const vDeg = document.getElementById('view-degradable');
+  const vSt  = document.getElementById('view-starch');
+  vOrig.style.display = (v === 'original')   ? '' : 'none';
+  vDeg.style.display  = (v === 'degradable') ? '' : 'none';
+  vSt.style.display   = (v === 'starch')     ? '' : 'none';
+  if (v === 'original') {
+    const g = document.getElementById('graph');
+    g.querySelectorAll('.nd, .app-area').forEach(e => e.remove());
+    Object.keys(nMap).forEach(k => delete nMap[k]);
+    const svg = document.getElementById('svg');
+    svg.innerHTML = svg.querySelector('defs').outerHTML;
+    init();
+  } else if (v === 'degradable') {
+    if (!window._g2Inited) { initGraph2(); window._g2Inited = true; }
+    g2ZP.setup(); g2ZP.fit();
+  } else if (v === 'starch') {
+    if (!window._g3Inited) { initGraph3(); window._g3Inited = true; }
+    g3ZP.setup(); g3ZP.fit();
+    setupStarchViewToggle();
+  }
+});
+
+/* 淀粉合成路线：工艺视图 / 屯河覆盖度视图 切换 */
+function setupStarchViewToggle(){
+  const tb = document.querySelector('#view-starch .view-toolbar');
+  if (!tb || tb.dataset.inited) return;
+  tb.dataset.inited = '1';
+  const g3 = document.getElementById('graph3');
+  const view = document.getElementById('view-starch');
+  tb.querySelectorAll('.vt-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      tb.querySelectorAll('.vt-btn').forEach(x => x.classList.remove('active'));
+      btn.classList.add('active');
+      const mode = btn.dataset.mode;
+      if (mode === 'coverage') {
+        g3.classList.add('coverage-mode');
+        view.classList.add('cov-active');
+      } else {
+        g3.classList.remove('coverage-mode');
+        view.classList.remove('cov-active');
+      }
+    });
+  });
+}
+
+/* 通用：图谱缩放 + 拖拽控制器 */
+function createZoomPan(opts){
+  // opts: { wrapId, graphId, baseW, baseH, btnInId, btnOutId, btnFitId, pctId, min, max }
+  const MIN = opts.min || 0.05, MAX = opts.max || 3;
+  const state = { scale: 1, tx: 0, ty: 0, dragging:false, sMX:0, sMY:0, sTX:0, sTY:0 };
+
+  function apply(){
+    const g = document.getElementById(opts.graphId);
+    if (!g) return;
+    g.style.transform = 'translate(' + state.tx + 'px,' + state.ty + 'px) scale(' + state.scale + ')';
+    const pct = opts.pctId && document.getElementById(opts.pctId);
+    if (pct) pct.textContent = Math.round(state.scale * 100) + '%';
+  }
+  function fit(){
+    const wrap = document.getElementById(opts.wrapId);
+    if (!wrap) return;
+    const PAD = 24;
+    let s;
+    if (opts.initScale) {
+      // 固定初始缩放：内容窄于视口则居中，宽于视口则顶左留 PAD（方便从头读）
+      s = opts.initScale;
+      state.scale = s;
+      state.tx = opts.baseW * s <= wrap.clientWidth  - PAD*2
+        ? (wrap.clientWidth  - opts.baseW * s) / 2 : PAD;
+      state.ty = opts.baseH * s <= wrap.clientHeight - PAD*2
+        ? (wrap.clientHeight - opts.baseH * s) / 2 : PAD;
+    } else {
+      // 整图 fit 模式
+      const availW = Math.max(100, wrap.clientWidth  - PAD*2);
+      const availH = Math.max(100, wrap.clientHeight - PAD*2);
+      s = Math.min(availW / opts.baseW, availH / opts.baseH, 1);
+      state.scale = s;
+      state.tx = (wrap.clientWidth  - opts.baseW * s) / 2;
+      state.ty = (wrap.clientHeight - opts.baseH * s) / 2;
+    }
+    apply();
+  }
+  function zoomAt(mx, my, factor){
+    const newScale = Math.max(MIN, Math.min(MAX, state.scale * factor));
+    if (newScale === state.scale) return;
+    state.tx = mx - (mx - state.tx) * (newScale / state.scale);
+    state.ty = my - (my - state.ty) * (newScale / state.scale);
+    state.scale = newScale;
+    apply();
+  }
+  function setup(){
+    const wrap = document.getElementById(opts.wrapId);
+    if (!wrap || wrap.dataset.zpInited) return;
+    wrap.dataset.zpInited = '1';
+
+    // 滚轮缩放（以鼠标位置为中心）
+    wrap.addEventListener('wheel', e => {
+      e.preventDefault();
+      const r = wrap.getBoundingClientRect();
+      const factor = e.deltaY < 0 ? 1.12 : 1/1.12;
+      zoomAt(e.clientX - r.left, e.clientY - r.top, factor);
+    }, { passive: false });
+
+    // 拖拽平移（避开节点 / 边标签 / 应用区，让它们正常响应点击）
+    wrap.addEventListener('mousedown', e => {
+      if (e.button !== 0) return;
+      if (e.target.closest('.nd, .nd2, .eg-lbl, .app-area')) return;
+      state.dragging = true;
+      state.sMX = e.clientX; state.sMY = e.clientY;
+      state.sTX = state.tx; state.sTY = state.ty;
+      wrap.classList.add('dragging');
+      e.preventDefault();
+    });
+    window.addEventListener('mousemove', e => {
+      if (!state.dragging) return;
+      state.tx = state.sTX + (e.clientX - state.sMX);
+      state.ty = state.sTY + (e.clientY - state.sMY);
+      apply();
+    });
+    window.addEventListener('mouseup', () => {
+      if (!state.dragging) return;
+      state.dragging = false;
+      wrap.classList.remove('dragging');
+    });
+
+    // 控件按钮
+    const center = () => {
+      const r = wrap.getBoundingClientRect();
+      return { x: r.width/2, y: r.height/2 };
+    };
+    const bIn  = opts.btnInId  && document.getElementById(opts.btnInId);
+    const bOut = opts.btnOutId && document.getElementById(opts.btnOutId);
+    const bFit = opts.btnFitId && document.getElementById(opts.btnFitId);
+    if (bIn)  bIn.addEventListener('click',  () => { const c = center(); zoomAt(c.x, c.y, 1.2); });
+    if (bOut) bOut.addEventListener('click', () => { const c = center(); zoomAt(c.x, c.y, 1/1.2); });
+    if (bFit) bFit.addEventListener('click', fit);
+  }
+  return { state, fit, zoomAt, setup };
+}
+
+// 总图谱（3800×11000）+ 淀粉链（2400×450）两套独立控制器
+// g2 用固定 60% 初始缩放，便于看清细节；g3 用整图 fit 居中
+const g2ZP = createZoomPan({wrapId:'graph2-wrap', graphId:'graph2', baseW:3800, baseH:11000,
+  btnInId:'g2ZoomIn', btnOutId:'g2ZoomOut', btnFitId:'g2ZoomFit', pctId:'g2ZoomPct',
+  min:0.05, max:3, initScale:0.6});
+const g3ZP = createZoomPan({wrapId:'graph3-wrap', graphId:'graph3', baseW:2400, baseH:450,
+  btnInId:'g3ZoomIn', btnOutId:'g3ZoomOut', btnFitId:'g3ZoomFit', pctId:'g3ZoomPct', min:0.2, max:3});
+
+window.addEventListener('resize', () => {
+  if (document.getElementById('view-degradable').style.display !== 'none') g2ZP.fit();
+  if (document.getElementById('view-starch'    ).style.display !== 'none') g3ZP.fit();
+});
+
+init();
+
+/* ════════════════════════════════════════════════
+   图谱 2：生物可降解材料 总图谱（横向树形）
+   依据 1.412-最新生物可降解材料产业链.pdf
+════════════════════════════════════════════════ */
+/* 节点定位辅助：每行 36px；不同区块用不同 y 起点 */
+const N2 = [
+  /* ROOT + 路线 */
+  {id:'r',     n:'生物可降解材料', x:18,  y:920, w:60,  h:200, c:'nd2-gray',   vert:true},
+  {id:'rtBio', n:'生物基路线',     x:110, y:330, w:32,  h:120, c:'nd2-blue',   vert:true},
+  {id:'rtPet', n:'石油基路线',     x:110, y:1560,w:32,  h:120, c:'nd2-blue',   vert:true},
+
+  /* ════ 生物基 / 植物基原料（中心位置，覆盖 6 个子节点的纵向跨度） ════ */
+  {id:'plMat', n:'植物基原料', x:170, y:1820, w:90, h:50, c:'nd2-orange'},
+
+  /* ══ 淀粉链 (完整复刻) ══
+     淀粉(orange) ─→ 破晶处理 → 熔融淀粉 → 改性增塑造粒 → 热塑性淀粉(TPS) → 共混改性 → TPS
+                ─→ 预处理   → 高活性淀粉 → 淀粉水解 → 糖化液 ─→ 乳酸提纯 → 乳酸单体 → 聚合反应 → 淀粉基聚乳酸(PLA)
+                                                          └→ pha提取 → 淀粉基聚羟基脂肪酸酯(PHA)
+                ─→ 接枝共聚反应 → 可降解吸水树脂 */
+  {id:'starch', n:'淀粉', x:320, y:130, w:54, h:38, c:'nd2-orange'},
+  /* 工艺层（绿，距 淀粉 130px 横向间距以放边标签） */
+  {id:'st-1', n:'破晶处理', x:500, y:25, w:84, c:'nd2-green'},
+  {id:'st-2', n:'预处理',   x:500, y:160, w:70, c:'nd2-green'},
+  /* 中间产物（黄） */
+  {id:'st-p1', n:'熔融淀粉', x:720, y:25,  w:80, c:'nd2-yellow'},
+  {id:'st-p2', n:'高活性淀粉', x:700, y:160, w:90, c:'nd2-yellow'},
+  /* TPS 链（顶部，每步 150-170px 间距）*/
+  {id:'st-tps0', n:'改性增塑造粒', x:940, y:25,  w:108, c:'nd2-green'},
+  {id:'st-tps',  n:'热塑性淀粉(TPS)', x:1210, y:25, w:140, c:'nd2-yellow'},
+  {id:'st-mix',  n:'共混改性', x:1510, y:25, w:80, c:'nd2-green'},
+  {id:'st-tps2', n:'TPS', x:1740, y:25, w:50, c:'nd2-yellow'},
+  /* 糖化液 链（中间）*/
+  {id:'st-hyd',  n:'淀粉水解', x:940, y:160, w:80, c:'nd2-green'},
+  {id:'glcs',    n:'糖化液',   x:1210, y:160, w:60, c:'nd2-yellow'},
+  {id:'glcs-1',  n:'乳酸提纯', x:1420, y:130, w:75, c:'nd2-green'},
+  {id:'glcs-2',  n:'pha提取',  x:1420, y:200, w:65, c:'nd2-green'},
+  {id:'lac-m',   n:'乳酸单体', x:1660, y:130, w:75, c:'nd2-yellow'},
+  {id:'lac-p',   n:'聚合反应', x:1900, y:130, w:75, c:'nd2-green'},
+  {id:'pla',     n:'淀粉基聚乳酸(PLA)', x:2140, y:130, w:170, c:'nd2-yellow'},
+  {id:'st-pha',  n:'淀粉基聚羟基脂肪酸酯(PHA)', x:1660, y:200, w:230, c:'nd2-yellow'},
+  /* TPS 应用（紧贴 TPS 右侧） */
+  {id:'st-app-1', n:'农膜',           x:1860, y:-10, w:90,  c:'nd2-purple'},
+  {id:'st-app-2', n:'一次性日用品',   x:1860, y:15,  w:108, c:'nd2-purple'},
+  {id:'st-app-3', n:'3D打印耗材膜',   x:1860, y:40,  w:120, c:'nd2-purple'},
+  {id:'st-app-4', n:'电子设备包装膜', x:1860, y:65,  w:128, c:'nd2-purple'},
+  {id:'st-app-5', n:'食品/物流包装',  x:1860, y:90,  w:118, c:'nd2-purple'},
+  /* 淀粉基 PLA 应用（紧贴 PLA 右侧） */
+  {id:'pla-app-1', n:'农膜',             x:2340, y:90,  w:80,  c:'nd2-purple'},
+  {id:'pla-app-2', n:'刚性一次性日用品', x:2340, y:115, w:140, c:'nd2-purple'},
+  {id:'pla-app-3', n:'纤维与纺织',       x:2340, y:140, w:108, c:'nd2-purple'},
+  {id:'pla-app-4', n:'3D打印丝',         x:2340, y:165, w:90,  c:'nd2-purple'},
+  {id:'pla-app-5', n:'食品/物流包装',    x:2340, y:190, w:120, c:'nd2-purple'},
+  /* 淀粉基 PHA 应用 */
+  {id:'pha-app-1', n:'农膜',                 x:1910, y:230, w:80,  c:'nd2-purple'},
+  {id:'pha-app-2', n:'弹性一次性制品',       x:1910, y:255, w:140, c:'nd2-purple'},
+  {id:'pha-app-3', n:'海水可降解食品包装膜', x:1910, y:280, w:170, c:'nd2-purple'},
+  {id:'pha-app-4', n:'纤维与无纺布',         x:1910, y:305, w:120, c:'nd2-purple'},
+  {id:'pha-app-5', n:'3D打印弹性丝',         x:1910, y:330, w:120, c:'nd2-purple'},
+
+  /* ══ 纤维素链（行间距 65px，列间距 160-180px） ══ */
+  {id:'cell', n:'纤维素', x:320, y:780, w:54, h:38, c:'nd2-orange'},
+  /* 工艺层（绿，左列，y=420-940 跨 8 行） */
+  {id:'cl-1', n:'破碎打浆处理', x:500, y:420, w:108, c:'nd2-green'},
+  {id:'cl-2', n:'溶解成型处理', x:500, y:540, w:108, c:'nd2-green'},
+  {id:'cl-3', n:'发泡处理',     x:520, y:660, w:70,  c:'nd2-green', dashed:true},
+  {id:'cl-4', n:'酯化反应',     x:520, y:780, w:70,  c:'nd2-green'},
+  {id:'cl-5', n:'接枝共聚反应', x:500, y:900, w:100, c:'nd2-green'},
+  {id:'cl-6', n:'水热醇解',     x:520, y:1020, w:70,  c:'nd2-green', dashed:true},
+  {id:'cl-7', n:'微生物发酵',   x:500, y:1140, w:80,  c:'nd2-green'},
+  {id:'cl-8', n:'酶解发酵',     x:500, y:1260, w:80,  c:'nd2-green', dashed:true},
+  /* 一级产物（黄，第三列 x≈640） */
+  {id:'cl-p1', n:'纤维素浆料(纸浆)',         x:760, y:420, w:140, c:'nd2-yellow'},
+  {id:'cl-p2', n:'纤维素再生膜/Lyocell纤维', x:760, y:540, w:180, c:'nd2-yellow'},
+  {id:'cl-p3', n:'纤维素基多孔材料',         x:760, y:660, w:140, c:'nd2-yellow', dashed:true},
+  {id:'cl-p4', n:'醋酸纤维素塑料',           x:760, y:780, w:120, c:'nd2-yellow'},
+  {id:'cl-p5', n:'可降解吸水树脂',           x:760, y:900, w:118, c:'nd2-yellow'},
+  /* 水热醇解 → MG → 乙醇酸 → 粗乙交酯 → PGA 链 (全虚线，水平横向链 y=795) */
+  {id:'cl-mg',   n:'乙醇酸甲酯(MG)',     x:730, y:1020, w:130, c:'nd2-yellow', dashed:true},
+  {id:'cl-rec',  n:'精馏水解',            x:920, y:1020, w:78,  c:'nd2-green',  dashed:true},
+  {id:'cl-ua',   n:'乙醇酸',              x:1120, y:1020, w:60,  c:'nd2-yellow', dashed:true},
+  {id:'cl-pre',  n:'预聚-降膜裂解',       x:1290, y:1020, w:108, c:'nd2-green',  dashed:true},
+  {id:'cl-pga0', n:'粗乙交酯',            x:1520, y:1020, w:80,  c:'nd2-yellow', dashed:true},
+  {id:'cl-melt', n:'熔融结晶聚合',        x:1720, y:1020, w:108, c:'nd2-green',  dashed:true},
+  {id:'cl-pga',  n:'聚乙醇酸(PGA)',       x:1950, y:1020, w:130, c:'nd2-yellow', dashed:true},
+  /* 微生物发酵 → 乳酸单体 → 聚合反应 → 秸秆基PLA (虚线终止) */
+  {id:'cl-lac',  n:'乳酸单体', x:710, y:1140, w:75, c:'nd2-yellow'},
+  {id:'cl-pol',  n:'聚合反应', x:900, y:1140, w:75, c:'nd2-green'},
+  {id:'cl-pla',  n:'秸秆基/木聚糖基聚乳酸(PLA)', x:1120, y:1140, w:230, c:'nd2-yellow', dashed:true},
+  /* 酶解发酵 → PHA前体 → PHA提取 → 秸秆基PHA (全虚线) */
+  {id:'cl-php', n:'PHA前体',  x:710, y:1260, w:75, c:'nd2-yellow', dashed:true},
+  {id:'cl-phe', n:'PHA提取',  x:900, y:1260, w:75, c:'nd2-green',  dashed:true},
+  {id:'cl-pha', n:'秸秆基/木聚糖羟基脂肪酸酯(PHA)', x:1120, y:1260, w:250, c:'nd2-yellow', dashed:true},
+  /* 纤维素 5 个产物的专属应用（紧贴每个产物右侧，按 y 行排列） */
+  /* cl-p1 纸浆 (y=420) → 4 apps */
+  {id:'cell-app-1',  n:'蛋品与农副产品包装', x:1040, y:378, w:160, c:'nd2-purple'},
+  {id:'cell-app-2',  n:'餐饮具类',           x:1040, y:406, w:160,  c:'nd2-purple'},
+  {id:'cell-app-3',  n:'育苗与种植容器',     x:1040, y:434, w:160, c:'nd2-purple'},
+  {id:'cell-app-4',  n:'工业/物流包装',      x:1040, y:462, w:160, c:'nd2-purple'},
+  /* cl-p2 Lyocell (y=495) → 4 apps */
+  {id:'cell-app-5',  n:'食品包装膜',         x:1040, y:498, w:120, c:'nd2-purple'},
+  {id:'cell-app-6',  n:'反渗透膜',           x:1040, y:526, w:120,  c:'nd2-purple'},
+  {id:'cell-app-7',  n:'服装面料',           x:1040, y:554, w:120,  c:'nd2-purple'},
+  {id:'cell-app-8',  n:'医用纱布',           x:1040, y:582, w:120,  c:'nd2-purple'},
+  /* cl-p3 多孔材料 (y=570) → 4 apps */
+  {id:'cell-app-9',  n:'环境治理',           x:1040, y:618, w:100,  c:'nd2-purple'},
+  {id:'cell-app-10', n:'隔热保温',           x:1040, y:646, w:100,  c:'nd2-purple'},
+  {id:'cell-app-11', n:'生物医药',           x:1040, y:674, w:100,  c:'nd2-purple'},
+  {id:'cell-app-12', n:'柔性电子',           x:1040, y:702, w:100,  c:'nd2-purple'},
+  /* cl-p4 醋酸纤维素塑料 (y=645) → 3 apps */
+  {id:'cell-app-13', n:'一次性餐具、玩具',   x:1040, y:752, w:140, c:'nd2-purple'},
+  {id:'cell-app-14', n:'反渗透膜',           x:1040, y:780, w:140,  c:'nd2-purple'},
+  {id:'cell-app-15', n:'食品包装膜',         x:1040, y:808, w:140, c:'nd2-purple'},
+  /* cl-p5 吸水树脂 (y=720) → 2 apps */
+  {id:'cell-app-16', n:'尿布湿',             x:1040, y:886, w:108,  c:'nd2-purple'},
+  {id:'cell-app-17', n:'农业保水剂',         x:1040, y:914, w:108, c:'nd2-purple'},
+  /* PGA 链 7 应用（紧贴 PGA 右侧） */
+  {id:'cl-pga-app-1', n:'3D打印材料',       x:2120, y:924, w:140, c:'nd2-purple'},
+  {id:'cl-pga-app-2', n:'高气体阻隔性包装', x:2120, y:952, w:140, c:'nd2-purple'},
+  {id:'cl-pga-app-3', n:'手术缝合线',       x:2120, y:980, w:140, c:'nd2-purple'},
+  {id:'cl-pga-app-4', n:'骨折内固定装置',   x:2120, y:1008, w:140, c:'nd2-purple'},
+  {id:'cl-pga-app-5', n:'药物缓释载体',     x:2120, y:1036, w:140, c:'nd2-purple'},
+  {id:'cl-pga-app-6', n:'农业覆盖膜',       x:2120, y:1064, w:140, c:'nd2-purple'},
+  {id:'cl-pga-app-7', n:'包装袋/膜',        x:2120, y:1092, w:140,  c:'nd2-purple'},
+
+  /* ══ 半纤维素链（按 PDF 完整复刻；行间距按 app 数量动态） ══ */
+  {id:'hcell', n:'半纤维素', x:320, y:1660, w:60, h:38, c:'nd2-orange'},
+
+  /* Branch 1: 复合工艺 → 3 种聚糖薄膜（虚线） */
+  {id:'hc-1', n:'酯化反应/羧甲基化/接枝共聚/共混改性/酶法脱半乳糖化', x:500, y:1380, w:280, c:'nd2-green', dashed:true},
+  {id:'hc-p1', n:'木聚糖基薄膜',         x:820, y:1340, w:140, c:'nd2-yellow', dashed:true},
+  {id:'hc-p2', n:'木葡聚糖基薄膜',       x:820, y:1380, w:140, c:'nd2-yellow', dashed:true},
+  {id:'hc-p3', n:'半乳甘露聚糖基薄膜',   x:820, y:1420, w:158, c:'nd2-yellow', dashed:true},
+  {id:'hc-app-1', n:'大宗工业可降解包装与农业材料', x:1020, y:1340, w:240, c:'nd2-purple'},
+  {id:'hc-app-2', n:'高端功能包装与生物医药材料',   x:1020, y:1380, w:240, c:'nd2-purple'},
+  {id:'hc-app-3', n:'低成本食品包装与工业辅料',     x:1020, y:1420, w:220, c:'nd2-purple'},
+
+  /* Branch 2: 发酵聚合 → 酶解发酵 → PHA链（虚线红线） */
+  {id:'hc-2',    n:'发酵聚合', x:500, y:1500, w:78, c:'nd2-green', dashed:true},
+  {id:'hc-2b',   n:'酶解发酵', x:620, y:1500, w:78, c:'nd2-green', dashed:true},
+  {id:'hc-php',  n:'PHA前体',  x:760, y:1500, w:75, c:'nd2-yellow', dashed:true},
+  {id:'hc-phe',  n:'PHA提取',  x:880, y:1500, w:75, c:'nd2-green',  dashed:true},
+  {id:'hc-pha',  n:'秸秆基/木聚糖聚羟基脂肪酸酯(PHA)', x:1020, y:1500, w:280, c:'nd2-yellow', dashed:true},
+
+  /* Branch 3: 碱溶 → 半纤维素碱溶液 → 交联改性 → 半纤维素水凝胶 → 4 apps（全虚线，红线） */
+  {id:'hc-3',    n:'碱溶',     x:500, y:1620, w:60, c:'nd2-green', dashed:true},
+  {id:'hc-p4',   n:'半纤维素碱溶液', x:610, y:1620, w:130, c:'nd2-yellow', dashed:true},
+  {id:'hc-3b',   n:'交联改性', x:770, y:1620, w:78, c:'nd2-green', dashed:true},
+  {id:'hc-p5',   n:'半纤维素水凝胶', x:880, y:1620, w:130, c:'nd2-yellow', dashed:true},
+  {id:'hc-app-4', n:'伤口敷料与皮肤修复',         x:1050, y:1578, w:160, c:'nd2-purple'},
+  {id:'hc-app-5', n:'药物缓释与靶向递送',         x:1050, y:1606, w:160, c:'nd2-purple'},
+  {id:'hc-app-6', n:'医美支架',                   x:1050, y:1634, w:160, c:'nd2-purple'},
+  {id:'hc-app-7', n:'重金属或代谢毒物体外吸附',   x:1050, y:1662, w:200, c:'nd2-purple'},
+
+  /* Branch 4: 溶解交联 → 生物胶溶液 → 固化成型 → 半纤维素-壳聚糖复合可降解生物胶 → 2 apps（全虚线） */
+  {id:'hc-4',    n:'溶解交联', x:500, y:1740, w:78, c:'nd2-green', dashed:true},
+  {id:'hc-p6',   n:'生物胶溶液', x:610, y:1740, w:110, c:'nd2-yellow', dashed:true},
+  {id:'hc-4b',   n:'固化成型', x:750, y:1740, w:78, c:'nd2-green', dashed:true},
+  {id:'hc-p7',   n:'半纤维素-壳聚糖复合可降解生物胶', x:860, y:1740, w:240, c:'nd2-yellow', dashed:true},
+  {id:'hc-app-8', n:'木材粘合剂',     x:1140, y:1726, w:140, c:'nd2-purple'},
+  {id:'hc-app-9', n:'医用伤口敷料胶', x:1140, y:1754, w:140, c:'nd2-purple'},
+
+  /* Branch 5: 半纤维素活化 → 半纤维素溶液 → 交联/接枝制备 → 半纤维素基可降解吸附剂 → 2 apps（虚线） */
+  {id:'hc-5',    n:'半纤维素活化', x:500, y:1860, w:100, c:'nd2-green', dashed:true},
+  {id:'hc-p8',   n:'半纤维素溶液', x:630, y:1860, w:110, c:'nd2-yellow', dashed:true},
+  {id:'hc-5b',   n:'交联/接枝制备', x:770, y:1860, w:108, c:'nd2-green', dashed:true},
+  {id:'hc-p9',   n:'半纤维素基可降解吸附剂', x:910, y:1860, w:180, c:'nd2-yellow', dashed:true},
+  {id:'hc-app-10', n:'重金属废水处理剂', x:1120, y:1846, w:148, c:'nd2-purple'},
+  {id:'hc-app-11', n:'污水处理絮凝剂',   x:1120, y:1874, w:148, c:'nd2-purple'},
+
+  /* Branch 6: 稀酸水解 → 糠醛 → 氧化酯化 → FDME → 缩聚反应 → PEF → 4 apps（实线） */
+  {id:'hc-6',    n:'稀酸水解', x:500, y:1980, w:78, c:'nd2-green'},
+  {id:'furf',    n:'糠醛',     x:660, y:1980, w:50, c:'nd2-yellow'},
+  {id:'furf-1',  n:'氧化酯化', x:780, y:1980, w:78, c:'nd2-green'},
+  {id:'fdme',    n:'呋喃二甲酸二甲酯(FDME)', x:940, y:1980, w:178, c:'nd2-yellow'},
+  {id:'fdme-1',  n:'缩聚反应', x:1180, y:1980, w:78, c:'nd2-green'},
+  {id:'pef',     n:'聚呋喃二甲酸乙二醇酯(PEF)', x:1320, y:1980, w:220, c:'nd2-yellow'},
+  {id:'hc-app-12', n:'高阻隔性包装',   x:1580, y:1938, w:140, c:'nd2-purple'},
+  {id:'hc-app-13', n:'医用耗材',       x:1580, y:1966, w:140, c:'nd2-purple'},
+  {id:'hc-app-14', n:'纺织与纤维',     x:1580, y:1994, w:140, c:'nd2-purple'},
+  {id:'hc-app-15', n:'硬质塑料制品',   x:1580, y:2022, w:140, c:'nd2-purple'},
+
+  /* ════ 植物油脂 (y 555-680) ════ */
+  /* ══ 植物油脂链（3 大支链：油脂水解→FAPO / 环氧反应→WPU胶膜 / pha提取→PHA） ══ */
+  {id:'plOil', n:'植物油脂', x:320, y:2300, w:60, h:38, c:'nd2-orange'},
+
+  /* Branch 1: 油脂水解 → 混合脂肪酸 → 环氧化反应 → 环氧脂肪酸 → 开环-酯化反应 → FAPO */
+  {id:'po-1',  n:'油脂水解',     x:500, y:2180, w:78,  c:'nd2-green'},
+  {id:'po-p1', n:'混合脂肪酸',   x:660, y:2180, w:90,  c:'nd2-yellow'},
+  {id:'po-1b', n:'环氧化反应',   x:820, y:2180, w:78,  c:'nd2-green'},
+  {id:'po-p1b',n:'环氧脂肪酸',   x:960, y:2180, w:90,  c:'nd2-yellow'},
+  {id:'po-1c', n:'开环-酯化反应',x:1120, y:2180, w:108, c:'nd2-green'},
+  {id:'po-p7', n:'脂肪酸基聚酯多元醇(FAPO)', x:1300, y:2180, w:200, c:'nd2-yellow'},
+  /* FAPO 3 sub-processes（垂直分布） */
+  {id:'po-fapo-1', n:'FAPO-一步法本体浇注 PU 工艺膜固化', x:1560, y:2100, w:260, c:'nd2-green'},
+  {id:'po-fapo-2', n:'FAPO-湿固化 TPU 挤出造粒',          x:1560, y:2180, w:220, c:'nd2-green'},
+  {id:'po-fapo-3', n:'FAPO-全水发泡工艺',                 x:1560, y:2260, w:180, c:'nd2-green'},
+  /* FAPO 子产品 + 应用 */
+  {id:'po-fapo-p1', n:'PU 弹性膜', x:1860, y:2100, w:90, c:'nd2-yellow'},
+  {id:'po-fapo-p2', n:'TPU 颗粒',  x:1820, y:2180, w:90, c:'nd2-yellow'},
+  {id:'po-fapo-p3', n:'全水发泡软泡', x:1780, y:2260, w:120, c:'nd2-yellow'},
+  /* 一步法 PU 弹性膜 应用 */
+  {id:'po-fapo-app-1', n:'一次性餐饮具',           x:2000, y:2072, w:128, c:'nd2-purple'},
+  {id:'po-fapo-app-2', n:'育苗杯',                 x:2000, y:2100, w:90,  c:'nd2-purple'},
+  {id:'po-fapo-app-3', n:'无人机/文创可降解结构件', x:2000, y:2128, w:180, c:'nd2-purple'},
+  /* 湿固化 TPU 应用 */
+  {id:'po-fapo-app-4', n:'药品胶囊壳',     x:2000, y:2166, w:108, c:'nd2-purple'},
+  {id:'po-fapo-app-5', n:'口腔溃疡贴片',   x:2000, y:2194, w:120, c:'nd2-purple'},
+  /* 全水发泡软泡 应用 */
+  {id:'po-fapo-app-6', n:'软泡缓冲材料',   x:2000, y:2246, w:120, c:'nd2-purple'},
+  {id:'po-fapo-app-7', n:'隔热保温材料',   x:2000, y:2274, w:120, c:'nd2-purple'},
+
+  /* Branch 2: 环氧反应 → 环氧植物油 → 开环-羟基化 → 甲氧基化多元醇 → 预聚-中和-分散 → WPU 分散体 → 成膜固化 → 可降解水性聚氨酯胶膜 */
+  {id:'po-2',  n:'环氧反应',         x:500,  y:2400, w:78,  c:'nd2-green'},
+  {id:'po-p2', n:'环氧植物油',       x:660,  y:2400, w:90,  c:'nd2-yellow'},
+  {id:'po-2b', n:'开环-羟基化',      x:820,  y:2400, w:90,  c:'nd2-green'},
+  {id:'po-p6', n:'甲氧基化多元醇',   x:960,  y:2400, w:128, c:'nd2-yellow'},
+  {id:'po-2c', n:'预聚-中和-分散',   x:1140, y:2400, w:108, c:'nd2-green'},
+  {id:'po-p5', n:'植物油基 WPU 分散体', x:1310, y:2400, w:160, c:'nd2-yellow'},
+  {id:'po-2d', n:'成膜固化',         x:1520, y:2400, w:78,  c:'nd2-green'},
+  {id:'po-p4', n:'可降解水性聚氨酯胶膜', x:1640, y:2400, w:180, c:'nd2-yellow'},
+  /* WPU 胶膜 7 应用（竖向堆叠） */
+  {id:'po-wpu-app-1', n:'水果保鲜贴体膜',     x:1880, y:2316, w:140, c:'nd2-purple'},
+  {id:'po-wpu-app-2', n:'药品胶囊壳',         x:1880, y:2344, w:140, c:'nd2-purple'},
+  {id:'po-wpu-app-3', n:'退热贴',             x:1880, y:2372, w:140, c:'nd2-purple'},
+  {id:'po-wpu-app-4', n:'创口贴压敏层',       x:1880, y:2400, w:140, c:'nd2-purple'},
+  {id:'po-wpu-app-5', n:'纸吸管耐水胶',       x:1880, y:2428, w:140, c:'nd2-purple'},
+  {id:'po-wpu-app-6', n:'运动服装防水透湿膜', x:1880, y:2456, w:160, c:'nd2-purple'},
+  {id:'po-wpu-app-7', n:'低脂巧克力内衬',     x:1880, y:2484, w:140, c:'nd2-purple'},
+
+  /* Branch 3: pha提取 → 聚羟基脂肪酸酯(PHA)（虚线红线） */
+  {id:'po-3',  n:'pha提取',                  x:500, y:2560, w:70, c:'nd2-green', dashed:true},
+  {id:'po-p3', n:'聚羟基脂肪酸酯(PHA)',     x:660, y:2560, w:170, c:'nd2-yellow', dashed:true},
+
+  /* ══ 植物蛋白链（4 大支链） ══ */
+  {id:'plPr', n:'植物蛋白', x:320, y:2980, w:60, h:38, c:'nd2-orange'},
+
+  /* Branch 1: 蛋白糊制备 → 植物蛋白糊 → 发泡热成型 → 植物蛋白基可降解缓冲发泡材料 (虚线) */
+  {id:'pp-1',  n:'蛋白糊制备', x:500, y:2700, w:90, c:'nd2-green', dashed:true},
+  {id:'pp-p1', n:'植物蛋白糊', x:660, y:2700, w:88, c:'nd2-yellow', dashed:true},
+  {id:'pp-1b', n:'发泡热成型', x:800, y:2700, w:78, c:'nd2-green', dashed:true},
+  {id:'pp-p1b',n:'植物蛋白基可降解缓冲发泡材料', x:920, y:2700, w:220, c:'nd2-yellow', dashed:true},
+  {id:'pp-app-1', n:'电商/快递缓冲包装',   x:1180, y:2658, w:148, c:'nd2-purple'},
+  {id:'pp-app-2', n:'生鲜冷链托盘与蛋托', x:1180, y:2686, w:160, c:'nd2-purple'},
+  {id:'pp-app-3', n:'育苗杯与观赏植物盆', x:1180, y:2714, w:160, c:'nd2-purple'},
+  {id:'pp-app-4', n:'家电/化妆品高端内托', x:1180, y:2742, w:160, c:'nd2-purple'},
+
+  /* Branch 2: 蛋白超细粉碎 → 植物蛋白超细粉 → (2 产品: 塑料 + 包装膜) */
+  {id:'pp-2',  n:'蛋白超细粉碎', x:500, y:2880, w:108, c:'nd2-green'},
+  {id:'pp-p2', n:'植物蛋白超细粉', x:680, y:2880, w:110, c:'nd2-yellow'},
+  /* 2a 模压成型 → 塑料 → 5 apps */
+  {id:'pp-2a', n:'模压成型', x:820, y:2860, w:78, c:'nd2-green'},
+  {id:'pp-p2a',n:'植物蛋白塑料', x:940, y:2860, w:108, c:'nd2-yellow'},
+  {id:'pp-app-5', n:'一次性餐饮具',           x:1090, y:2804, w:128, c:'nd2-purple'},
+  {id:'pp-app-6', n:'育苗杯',                 x:1090, y:2832, w:90,  c:'nd2-purple'},
+  {id:'pp-app-7', n:'无人机/文创可降解结构件', x:1090, y:2860, w:180, c:'nd2-purple'},
+  {id:'pp-app-8', n:'药品胶囊壳',             x:1090, y:2888, w:108, c:'nd2-purple'},
+  {id:'pp-app-9', n:'口腔溃疡贴片',           x:1090, y:2916, w:120, c:'nd2-purple'},
+  /* 2b 成膜 → 包装膜 → 4 apps */
+  {id:'pp-2b', n:'成膜', x:820, y:2960, w:60, c:'nd2-green'},
+  {id:'pp-p2b',n:'植物蛋白基可降解包装膜', x:910, y:2960, w:200, c:'nd2-yellow'},
+  {id:'pp-app-10', n:'生鲜果蔬自承重袋',           x:1140, y:2966, w:148, c:'nd2-purple'},
+  {id:'pp-app-11', n:'即食肉类高阻隔垫片',         x:1140, y:2994, w:160, c:'nd2-purple'},
+  {id:'pp-app-12', n:'烘焙脂肪食品内衬',           x:1140, y:3022, w:148, c:'nd2-purple'},
+  {id:'pp-app-13', n:'育苗杯/观赏植物盆"膜-壳一体"', x:1140, y:3050, w:240, c:'nd2-purple'},
+
+  /* Branch 3: 蛋白提取与溶解 → 水溶液 → 胺化改性 → 氨基化蛋白溶液 → 成型干燥 → 氨基化蛋白粉末 → 交联固化 → 包装膜 */
+  {id:'pp-3',  n:'蛋白提取与溶解', x:500, y:3140, w:120, c:'nd2-green'},
+  {id:'pp-p3', n:'植物蛋白水溶液', x:660, y:3140, w:120, c:'nd2-yellow'},
+  {id:'pp-3b', n:'胺化改性', x:820, y:3140, w:78, c:'nd2-green'},
+  {id:'pp-p3b',n:'氨基化植物蛋白溶液', x:940, y:3140, w:148, c:'nd2-yellow'},
+  {id:'pp-3c', n:'成型干燥', x:1130, y:3140, w:78, c:'nd2-green'},
+  {id:'pp-p3c',n:'氨基化蛋白粉末', x:1250, y:3140, w:120, c:'nd2-yellow'},
+  {id:'pp-3d', n:'交联固化', x:1410, y:3140, w:78, c:'nd2-green'},
+  {id:'pp-p3d',n:'活性蛋白基包装膜', x:1530, y:3140, w:140, c:'nd2-yellow'},
+  {id:'pp-app-14', n:'生鲜果蔬冷藏裹包',   x:1720, y:3084, w:148, c:'nd2-purple'},
+  {id:'pp-app-15', n:'即食肉类高阻隔垫片', x:1720, y:3112, w:160, c:'nd2-purple'},
+  {id:'pp-app-16', n:'烘焙脂肪食品内衬',   x:1720, y:3140, w:148, c:'nd2-purple'},
+  {id:'pp-app-17', n:'可食胶囊/药膜',       x:1720, y:3168, w:120, c:'nd2-purple'},
+
+  /* Branch 4: 蛋白活化 → 植物活化蛋白溶液 → 造粒/成型 → 植物蛋白基可降解吸附剂颗粒 + 8 apps */
+  {id:'pp-4',  n:'蛋白活化', x:500, y:3320, w:78, c:'nd2-green'},
+  {id:'pp-p4', n:'植物活化蛋白溶液', x:620, y:3320, w:130, c:'nd2-yellow'},
+  {id:'pp-4b', n:'造粒/成型', x:790, y:3320, w:90, c:'nd2-green'},
+  {id:'pp-p4b',n:'植物蛋白基可降解吸附剂颗粒', x:920, y:3320, w:220, c:'nd2-yellow'},
+  {id:'pp-app-18', n:'一次性餐饮具',         x:1180, y:3208, w:128, c:'nd2-purple'},
+  {id:'pp-app-19', n:'育苗杯 & 田间容器',    x:1180, y:3236, w:160, c:'nd2-purple'},
+  {id:'pp-app-20', n:'玩具 & 文创礼品',      x:1180, y:3264, w:148, c:'nd2-purple'},
+  {id:'pp-app-21', n:'缓冲包装角 & 托盘',    x:1180, y:3292, w:160, c:'nd2-purple'},
+  {id:'pp-app-22', n:'水体重金属去除',       x:1180, y:3334, w:148, c:'nd2-purple'},
+  {id:'pp-app-23', n:'染料废水脱色',         x:1180, y:3362, w:148, c:'nd2-purple'},
+  {id:'pp-app-24', n:'农田/温室土壤重金属钝化', x:1180, y:3390, w:200, c:'nd2-purple'},
+  {id:'pp-app-25', n:'沼气/填埋场 H₂S 干式吸附', x:1180, y:3418, w:200, c:'nd2-purple'},
+
+  /* ══ 植物胶体链（3 大支链） ══ */
+  {id:'plGel', n:'植物胶体', x:320, y:3580, w:60, h:38, c:'nd2-orange'},
+
+  /* Branch 1: 溶胶-凝胶浇铸 → 果胶纤维素膜（虚线红线） */
+  {id:'pg-1',  n:'溶胶-凝胶浇铸', x:500, y:3400, w:120, c:'nd2-green', dashed:true},
+  {id:'pg-p1', n:'果胶纤维素膜', x:680, y:3400, w:120, c:'nd2-yellow', dashed:true},
+
+  /* Branch 2: 胶体碱溶 → 果胶水溶液 → 成膜固化 → 植物胶体可食包装薄膜 */
+  {id:'pg-2',  n:'胶体碱溶', x:500, y:3560, w:78, c:'nd2-green'},
+  {id:'pg-p2', n:'果胶水溶液', x:660, y:3560, w:100, c:'nd2-yellow'},
+  {id:'pg-2b', n:'成膜固化', x:820, y:3560, w:78, c:'nd2-green'},
+  {id:'pg-p2b',n:'植物胶体可食包装薄膜', x:940, y:3560, w:178, c:'nd2-yellow'},
+  /* 食用薄膜 5 应用 */
+  {id:'pg-app-1', n:'生鲜果蔬冷藏裹包',     x:1180, y:3504, w:148, c:'nd2-purple'},
+  {id:'pg-app-2', n:'即食肉类高阻隔垫片',   x:1180, y:3532, w:160, c:'nd2-purple'},
+  {id:'pg-app-3', n:'烘焙脂肪食品内衬',     x:1180, y:3560, w:148, c:'nd2-purple'},
+  {id:'pg-app-4', n:'可食胶囊/药膜',         x:1180, y:3588, w:120, c:'nd2-purple'},
+  {id:'pg-app-5', n:'易溶水包装(咖啡/营养)', x:1180, y:3616, w:200, c:'nd2-purple'},
+
+  /* Branch 3: 胶体-淀粉改性 → 玉米淀粉胶体 → 熔融共混 → 植物胶体基热熔胶粒 → 7 apps */
+  {id:'pg-3',  n:'胶体-淀粉改性', x:500, y:3760, w:108, c:'nd2-green'},
+  {id:'pg-p3', n:'玉米淀粉胶体', x:680, y:3760, w:110, c:'nd2-yellow'},
+  {id:'pg-3b', n:'熔融共混', x:820, y:3760, w:78, c:'nd2-green'},
+  {id:'pg-p3b',n:'植物胶体基热熔胶粒', x:940, y:3760, w:178, c:'nd2-yellow'},
+  /* 热熔胶粒 7 应用 */
+  {id:'pg-app-6',  n:'可堆肥快递封箱胶',          x:1180, y:3676, w:160, c:'nd2-purple'},
+  {id:'pg-app-7',  n:'纸吸管/纸杯侧缝胶',         x:1180, y:3704, w:160, c:'nd2-purple'},
+  {id:'pg-app-8',  n:'纸尿裤、卫生巾结构胶',      x:1180, y:3732, w:170, c:'nd2-purple'},
+  {id:'pg-app-9',  n:'育苗杯/纸浆模塑封底胶',     x:1180, y:3760, w:170, c:'nd2-purple'},
+  {id:'pg-app-10', n:'可降解标签与胶带',          x:1180, y:3788, w:148, c:'nd2-purple'},
+  {id:'pg-app-11', n:'可降解户外标牌',            x:1180, y:3816, w:140, c:'nd2-purple'},
+  {id:'pg-app-12', n:'与PBAT/PLA混合制加速崩解助剂', x:1180, y:3844, w:240, c:'nd2-purple'},
+
+  /* ══ 动物基原料 (parent of 动物蛋白/动物油脂/生物甲壳) ══ */
+  {id:'animBase', n:'动物基原料', x:170, y:6480, w:90, h:50, c:'nd2-orange'},
+
+  /* ══ 动物蛋白链 (4 sub-proteins: 角蛋白/明胶/胶原蛋白/丝蛋白) ══ */
+  {id:'anPr', n:'动物蛋白', x:320, y:5400, w:60, h:40, c:'nd2-orange'},
+
+  /* ── 角蛋白链 ── */
+  {id:'ap-k',   n:'角蛋白',   x:480, y:4400, w:54, c:'nd2-orange'},
+  {id:'ap-pk',  n:'破键溶解', x:620, y:4400, w:78, c:'nd2-green'},
+  {id:'ap-pk2', n:'角蛋白溶液', x:760, y:4400, w:88, c:'nd2-yellow'},
+  {id:'ap-pk3', n:'纯化', x:890, y:4400, w:60, c:'nd2-green'},
+  {id:'ap-pk4', n:'纯化角蛋白溶液或角蛋白粉末', x:990, y:4400, w:210, c:'nd2-yellow'},
+  {id:'ap-fm1', n:'改性-成型', x:1240, y:4400, w:78, c:'nd2-green'},
+  /* 角蛋白 4 个终产物 */
+  {id:'ap-r1a', n:'角蛋白/PVA共混膜', x:1370, y:4280, w:140, c:'nd2-yellow'},
+  {id:'ap-r1b', n:'角蛋白复合塑料',   x:1370, y:4360, w:130, c:'nd2-yellow'},
+  {id:'ap-r1c', n:'角蛋白纤维',       x:1370, y:4440, w:100, c:'nd2-yellow'},
+  {id:'ap-r1d', n:'角蛋白泡沫',       x:1370, y:4520, w:100, c:'nd2-yellow'},
+  /* 角蛋白/PVA共混膜 apps */
+  {id:'ap-ra1-1', n:'农业地膜',        x:1540, y:4220, w:108, c:'nd2-purple'},
+  {id:'ap-ra1-2', n:'育苗钵/花盆',     x:1540, y:4248, w:108, c:'nd2-purple'},
+  {id:'ap-ra1-3', n:'缓释肥料包膜',    x:1540, y:4276, w:120, c:'nd2-purple'},
+  {id:'ap-ra1-4', n:'缓冲包装材料',    x:1540, y:4304, w:120, c:'nd2-purple'},
+  /* 角蛋白复合塑料 apps */
+  {id:'ap-ra2-1', n:'一次性餐饮具',    x:1540, y:4344, w:128, c:'nd2-purple'},
+  {id:'ap-ra2-2', n:'文创可降解结构件', x:1540, y:4372, w:148, c:'nd2-purple'},
+  /* 角蛋白纤维 apps */
+  {id:'ap-ra3-1', n:'功能性内衣/家纺',  x:1540, y:4412, w:140, c:'nd2-purple'},
+  {id:'ap-ra3-2', n:'可吸收缝合线',    x:1540, y:4440, w:120, c:'nd2-purple'},
+  {id:'ap-ra3-3', n:'空气过滤纤维膜',  x:1540, y:4468, w:140, c:'nd2-purple'},
+  {id:'ap-ra3-4', n:'水处理滤膜',      x:1540, y:4496, w:108, c:'nd2-purple'},
+  /* 角蛋白泡沫 apps */
+  {id:'ap-ra4-1', n:'创伤修复海绵',    x:1540, y:4520, w:120, c:'nd2-purple'},
+  {id:'ap-ra4-2', n:'组织工程支架',    x:1540, y:4548, w:128, c:'nd2-purple'},
+  {id:'ap-ra4-3', n:'油污吸附泡沫',    x:1540, y:4576, w:120, c:'nd2-purple'},
+  {id:'ap-ra4-4', n:'重金属吸附剂',    x:1540, y:4604, w:120, c:'nd2-purple'},
+  {id:'ap-ra4-5', n:'绿色建筑保温层',  x:1540, y:4632, w:128, c:'nd2-purple'},
+
+  /* ── 明胶链 ── */
+  {id:'ap-m',   n:'明胶',     x:480, y:5000, w:54, c:'nd2-orange'},
+  {id:'ap-pm',  n:'提取纯化', x:620, y:5000, w:78, c:'nd2-green'},
+  {id:'ap-pm2', n:'明胶粉',   x:760, y:5000, w:60, c:'nd2-yellow'},
+  {id:'ap-fm2', n:'改性-成型', x:880, y:5000, w:78, c:'nd2-green'},
+  /* 明胶 3 个终产物 */
+  {id:'ap-r2a', n:'明胶硬/软胶囊', x:1010, y:4920, w:120, c:'nd2-yellow'},
+  {id:'ap-r2b', n:'可食性包装膜',  x:1010, y:5000, w:120, c:'nd2-yellow'},
+  {id:'ap-r2c', n:'明胶海绵',       x:1010, y:5080, w:90,  c:'nd2-yellow'},
+  /* 明胶硬/软胶囊 apps */
+  {id:'ap-rm1-1', n:'口服固体药物',           x:1160, y:4870, w:120, c:'nd2-purple'},
+  {id:'ap-rm1-2', n:'高载液量一剂式给药封装', x:1160, y:4898, w:180, c:'nd2-purple'},
+  {id:'ap-rm1-3', n:'化妆品与功能性食品',     x:1160, y:4926, w:160, c:'nd2-purple'},
+  /* 可食性包装膜 apps */
+  {id:'ap-rm2-1', n:'即食食品包装',     x:1160, y:4986, w:128, c:'nd2-purple'},
+  {id:'ap-rm2-2', n:'微胶囊/复合膜',    x:1160, y:5014, w:130, c:'nd2-purple'},
+  /* 明胶海绵 apps */
+  {id:'ap-rm3-1', n:'医用止血',         x:1160, y:5054, w:100, c:'nd2-purple'},
+  {id:'ap-rm3-2', n:'组织工程支架',     x:1160, y:5082, w:128, c:'nd2-purple'},
+
+  /* ── 胶原蛋白链 ── */
+  {id:'ap-c',   n:'胶原蛋白', x:480, y:5600, w:70, c:'nd2-orange'},
+  {id:'ap-pc',  n:'提取纯化', x:640, y:5600, w:78, c:'nd2-green'},
+  {id:'ap-pc2', n:'胶原溶液', x:780, y:5600, w:90, c:'nd2-yellow'},
+  {id:'ap-fm3', n:'交联/共混改性', x:920, y:5600, w:108, c:'nd2-green'},
+  /* 胶原蛋白 4 个终产物 */
+  {id:'ap-r3a', n:'胶原膜',     x:1080, y:5470, w:80, c:'nd2-yellow'},
+  {id:'ap-r3b', n:'胶原海绵',   x:1080, y:5560, w:80, c:'nd2-yellow'},
+  {id:'ap-r3c', n:'胶原纤维',   x:1080, y:5650, w:80, c:'nd2-yellow'},
+  {id:'ap-r3d', n:'胶原水凝胶', x:1080, y:5740, w:90, c:'nd2-yellow'},
+  /* 胶原膜 apps */
+  {id:'ap-rc1-1', n:'口腔医学辅料',                 x:1220, y:5410, w:128, c:'nd2-purple'},
+  {id:'ap-rc1-2', n:'角膜修复膜或结膜缺损补片',     x:1220, y:5438, w:220, c:'nd2-purple'},
+  {id:'ap-rc1-3', n:'可溶解胶原面膜基材',           x:1220, y:5466, w:160, c:'nd2-purple'},
+  /* 胶原海绵 apps */
+  {id:'ap-rc2-1', n:'止血海绵',         x:1220, y:5530, w:100, c:'nd2-purple'},
+  {id:'ap-rc2-2', n:'组织工程载体',     x:1220, y:5558, w:128, c:'nd2-purple'},
+  {id:'ap-rc2-3', n:'口腔填充',         x:1220, y:5586, w:100, c:'nd2-purple'},
+  /* 胶原纤维 apps */
+  {id:'ap-rc3-1', n:'组织工程支架',     x:1220, y:5622, w:128, c:'nd2-purple'},
+  {id:'ap-rc3-2', n:'可吸收缝合线',     x:1220, y:5650, w:120, c:'nd2-purple'},
+  {id:'ap-rc3-3', n:'纺织与医用敷料',   x:1220, y:5678, w:140, c:'nd2-purple'},
+  /* 胶原水凝胶 apps */
+  {id:'ap-rc4-1', n:'组织工程与再生医学',  x:1220, y:5712, w:160, c:'nd2-purple'},
+  {id:'ap-rc4-2', n:'局部药物缓释载体',    x:1220, y:5740, w:140, c:'nd2-purple'},
+  {id:'ap-rc4-3', n:'干细胞递送载体',      x:1220, y:5768, w:128, c:'nd2-purple'},
+  {id:'ap-rc4-4', n:'美容与再生医美填充材料', x:1220, y:5796, w:180, c:'nd2-purple'},
+  {id:'ap-rc4-5', n:'水光针核心成分',      x:1220, y:5824, w:128, c:'nd2-purple'},
+
+  /* ── 丝蛋白链 ── */
+  {id:'ap-s',   n:'丝蛋白',   x:480, y:6200, w:60, c:'nd2-orange'},
+  {id:'ap-ps',  n:'提取纯化', x:620, y:6200, w:78, c:'nd2-green'},
+  {id:'ap-ps2', n:'丝素蛋白溶液', x:760, y:6200, w:108, c:'nd2-yellow'},
+  {id:'ap-fm4', n:'改性-成型', x:910, y:6200, w:78, c:'nd2-green'},
+  /* 丝蛋白 2 个终产物 */
+  {id:'ap-r4a', n:'丝素纳米纤维膜', x:1040, y:6160, w:130, c:'nd2-yellow'},
+  {id:'ap-r4b', n:'丝素透明薄膜',   x:1040, y:6240, w:120, c:'nd2-yellow', dashed:true},
+  /* 丝素纳米纤维膜 apps */
+  {id:'ap-rs1-1', n:'高端伤口敷料',       x:1190, y:6118, w:128, c:'nd2-purple'},
+  {id:'ap-rs1-2', n:'小型直径血管移植物', x:1190, y:6146, w:160, c:'nd2-purple'},
+  {id:'ap-rs1-3', n:'柔性生物电子',       x:1190, y:6174, w:120, c:'nd2-purple'},
+  /* 丝素透明薄膜 apps */
+  {id:'ap-rs2-1', n:'透明创口贴/术后屏障', x:1190, y:6212, w:160, c:'nd2-purple'},
+  {id:'ap-rs2-2', n:'角膜/口腔黏膜替代',   x:1190, y:6240, w:160, c:'nd2-purple'},
+  {id:'ap-rs2-3', n:'微针给药载体',        x:1190, y:6268, w:120, c:'nd2-purple'},
+
+  /* ════ 动物油脂 (y 1210-1330) — 多元醇/pha/油脂环氧化 全部虚线 ════ */
+  /* ══ 动物油脂链（3 大支链） ══ */
+  {id:'anOil', n:'动物油脂', x:320, y:6800, w:60, h:40, c:'nd2-orange'},
+
+  /* Branch 1: 提取纯化 → 脂肪酸甲酯/乙酯粗品 → 分离精制 → 脂肪酸甲酯/乙酯 → 4 apps */
+  {id:'ao-1',  n:'提取纯化', x:500, y:6600, w:78, c:'nd2-green'},
+  {id:'ao-p1', n:'脂肪酸甲酯/乙酯粗品', x:660, y:6600, w:170, c:'nd2-yellow'},
+  {id:'ao-pm', n:'分离精制', x:870, y:6600, w:78, c:'nd2-green'},
+  {id:'ao-p2', n:'脂肪酸甲酯/乙酯', x:990, y:6600, w:140, c:'nd2-yellow'},
+  {id:'ao-app-1', n:'生物燃料',           x:1180, y:6544, w:108, c:'nd2-purple'},
+  {id:'ao-app-2', n:'绿色增塑剂',         x:1180, y:6572, w:108, c:'nd2-purple'},
+  {id:'ao-app-3', n:'表面活性剂 & 洗涤剂', x:1180, y:6600, w:158, c:'nd2-purple'},
+  {id:'ao-app-4', n:'香料 & 化妆品',      x:1180, y:6628, w:130, c:'nd2-purple'},
+
+  /* Branch 2: 加氢还原 (虚线) → 脂肪醇 (虚线) → 开环共聚 (虚线) → 聚己内酯PCL (虚线) → 5 apps */
+  {id:'ao-2',  n:'加氢还原', x:500, y:6800, w:78, c:'nd2-green', dashed:true},
+  {id:'ao-p3', n:'脂肪醇',   x:660, y:6800, w:60, c:'nd2-yellow', dashed:true},
+  {id:'ao-3',  n:'开环共聚', x:780, y:6800, w:78, c:'nd2-green', dashed:true},
+  {id:'ao-p4', n:'聚己内酯(PCL)', x:920, y:6800, w:130, c:'nd2-yellow', dashed:true},
+  {id:'ao-app-5', n:'手术缝合线',                x:1110, y:6716, w:120, c:'nd2-purple'},
+  {id:'ao-app-6', n:'医美"少女针"与皮肤填充', x:1110, y:6744, w:200, c:'nd2-purple'},
+  {id:'ao-app-7', n:'组织工程与 3D 打印',        x:1110, y:6772, w:160, c:'nd2-purple'},
+  {id:'ao-app-8', n:'固态锂电池复合电解质',      x:1110, y:6800, w:180, c:'nd2-purple'},
+  {id:'ao-app-9', n:'可降解地膜',                x:1110, y:6828, w:108, c:'nd2-purple'},
+
+  /* Branch 3: pha提取 (虚线) → 聚羟基脂肪酸酯(PHA) (虚线) */
+  {id:'ao-4',  n:'pha提取', x:500, y:6960, w:70, c:'nd2-green', dashed:true},
+  {id:'ao-p5', n:'聚羟基脂肪酸酯(PHA)', x:660, y:6960, w:200, c:'nd2-yellow', dashed:true},
+
+  /* ══ 生物甲壳链 ══ */
+  {id:'biChi', n:'生物甲壳', x:320, y:7560, w:60, h:40, c:'nd2-orange'},
+
+  /* 主链: 壳聚糖脱乙酰化 → 壳聚糖粗品 → 干燥与粉碎 → 工业级壳聚糖粉末 */
+  {id:'bc-1',  n:'壳聚糖脱乙酰化工艺', x:480, y:7560, w:160, c:'nd2-green'},
+  {id:'bc-p1', n:'壳聚糖粗品', x:680, y:7560, w:100, c:'nd2-yellow'},
+  {id:'bc-2',  n:'干燥与粉碎', x:820, y:7560, w:90, c:'nd2-green'},
+  {id:'bc-p2', n:'工业级壳聚糖粉末', x:960, y:7560, w:148, c:'nd2-yellow'},
+
+  /* Branch 1（上）: 溶解提取 → 壳聚糖溶液 → 流延成膜 → 壳聚糖膜（全虚线红线） */
+  {id:'bc-3',  n:'溶解提取', x:1160, y:7400, w:78, c:'nd2-green', dashed:true},
+  {id:'bc-p3', n:'壳聚糖溶液', x:1290, y:7400, w:100, c:'nd2-yellow', dashed:true},
+  {id:'bc-4',  n:'流延成膜', x:1430, y:7400, w:78, c:'nd2-green', dashed:true},
+  {id:'bc-p4', n:'壳聚糖膜', x:1560, y:7400, w:90, c:'nd2-yellow', dashed:true},
+  {id:'bc-app-1', n:'食品保鲜膜',     x:1700, y:7372, w:108, c:'nd2-purple'},
+  {id:'bc-app-2', n:'医用敷料',        x:1700, y:7400, w:90,  c:'nd2-purple'},
+  {id:'bc-app-3', n:'防腐涂层',        x:1700, y:7428, w:90,  c:'nd2-purple'},
+
+  /* Branch 2（中）: 纺丝制备 → 壳聚糖纤维 */
+  {id:'bc-5',  n:'纺丝制备', x:1160, y:7560, w:78, c:'nd2-green'},
+  {id:'bc-p5', n:'壳聚糖纤维', x:1290, y:7560, w:108, c:'nd2-yellow'},
+  {id:'bc-app-4', n:'医用纺织品',     x:1430, y:7532, w:108, c:'nd2-purple'},
+  {id:'bc-app-5', n:'抗菌纺织',        x:1430, y:7560, w:90,  c:'nd2-purple'},
+  {id:'bc-app-6', n:'可吸收缝合线',    x:1430, y:7588, w:120, c:'nd2-purple'},
+
+  /* Branch 3（下）: 溶液与共混 → 复合浆料 → 注模与冷冻 → 多孔干凝胶支架 → 交联固化 → 壳聚糖交联支架 */
+  {id:'bc-6',  n:'溶液与共混', x:1160, y:7720, w:96, c:'nd2-green'},
+  {id:'bc-p6', n:'复合浆料',   x:1290, y:7720, w:90, c:'nd2-yellow'},
+  {id:'bc-7',  n:'注模与冷冻', x:1410, y:7720, w:96, c:'nd2-green'},
+  {id:'bc-p7', n:'多孔干凝胶支架', x:1540, y:7720, w:140, c:'nd2-yellow'},
+  {id:'bc-8',  n:'交联固化',   x:1710, y:7720, w:78, c:'nd2-green'},
+  {id:'bc-p8', n:'壳聚糖交联支架', x:1820, y:7720, w:140, c:'nd2-yellow'},
+  {id:'bc-app-7',  n:'组织工程支架',  x:2000, y:7678, w:128, c:'nd2-purple'},
+  {id:'bc-app-8',  n:'创伤修复',       x:2000, y:7706, w:108, c:'nd2-purple'},
+  {id:'bc-app-9',  n:'药物缓释载体',   x:2000, y:7734, w:120, c:'nd2-purple'},
+  {id:'bc-app-10', n:'骨缺损修复',     x:2000, y:7762, w:108, c:'nd2-purple'},
+
+  /* ══════════ 石油基 / 煤炭 (y 7720-9520) ══════════ */
+  {id:'coal2', n:'煤炭', x:170, y:8500, w:60, h:40, c:'nd2-orange'},
+
+  /* 煤炭→气化路线 (上路) */
+  {id:'co2-1', n:'气流床气化技术', x:270, y:7960, w:128, c:'nd2-green'},
+  {id:'syn',   n:'合成气',         x:430, y:7960, w:60,  c:'nd2-yellow'},
+
+  /* ── 合成气支链 1：DMO → PGA (y=7720) ── */
+  {id:'sg-1', n:'草酸二甲酯合成',    x:540, y:7720, w:128, c:'nd2-green'},
+  {id:'dmo',  n:'草酸二甲酯(DMO)',   x:700, y:7720, w:128, c:'nd2-yellow'},
+  {id:'dmo-1',n:'加氢精制',          x:860, y:7720, w:78,  c:'nd2-green'},
+  {id:'mg',   n:'乙醇酸甲酯(MG)',    x:970, y:7720, w:130, c:'nd2-yellow'},
+  {id:'mg-1', n:'纯化与水解',        x:1130, y:7720, w:90, c:'nd2-green'},
+  {id:'ua',   n:'乙醇酸/乙交酯(GA)', x:1250, y:7720, w:140, c:'nd2-yellow'},
+  {id:'ua-2', n:'开环聚合',          x:1420, y:7720, w:78,  c:'nd2-green'},
+  {id:'pga',  n:'聚乙醇酸(PGA)',     x:1530, y:7720, w:120, c:'nd2-yellow'},
+
+  /* PGA apps (7 vertical at x=1700, center y=7720) */
+  {id:'co-pga-a1', n:'3D打印材料',         x:1700, y:7636, w:120, c:'nd2-purple'},
+  {id:'co-pga-a2', n:'高气体阻隔性包装',   x:1700, y:7664, w:140, c:'nd2-purple'},
+  {id:'co-pga-a3', n:'手术缝合线',         x:1700, y:7692, w:108, c:'nd2-purple'},
+  {id:'co-pga-a4', n:'骨折内固定装置',     x:1700, y:7720, w:128, c:'nd2-purple'},
+  {id:'co-pga-a5', n:'药物缓释载体',       x:1700, y:7748, w:120, c:'nd2-purple'},
+  {id:'co-pga-a6', n:'农业覆盖膜',         x:1700, y:7776, w:108, c:'nd2-purple'},
+  {id:'co-pga-a7', n:'包装袋/膜',          x:1700, y:7804, w:100, c:'nd2-purple'},
+
+  /* ── 合成气支链 2：PHA 提取 (虚线红, y=7920) ── */
+  {id:'sg-3',  n:'pha提取',                x:540, y:7920, w:78,  c:'nd2-green',  dashed:true},
+  {id:'pha2',  n:'聚羟基脂肪酸酯(PHA)',    x:680, y:7920, w:160, c:'nd2-yellow', dashed:true},
+
+  /* PHA apps (6 vertical at x=880, center y=7920) */
+  {id:'co-pha-a1', n:'一次性环保包装',     x:880, y:7836, w:128, c:'nd2-purple'},
+  {id:'co-pha-a2', n:'3D打印线材',         x:880, y:7864, w:108, c:'nd2-purple'},
+  {id:'co-pha-a3', n:'可降解地膜',         x:880, y:7892, w:108, c:'nd2-purple'},
+  {id:'co-pha-a4', n:'护肤品',             x:880, y:7920, w:78,  c:'nd2-purple'},
+  {id:'co-pha-a5', n:'高气体阻隔瓶',       x:880, y:7948, w:120, c:'nd2-purple'},
+  {id:'co-pha-a6', n:'压电/光学器件',      x:880, y:7976, w:128, c:'nd2-purple'},
+
+  /* ── 合成气支链 3：甲醇合成 → 甲醇 (y=8200, 主轴) ── */
+  {id:'sg-2',  n:'甲醇合成',  x:540, y:8200, w:78,  c:'nd2-green'},
+  {id:'meoh',  n:'甲醇',      x:680, y:8200, w:48,  c:'nd2-yellow'},
+
+  /* 甲醇支链 a：pha提取 → PHA-2 (虚线红, y=8100) */
+  {id:'me-pha', n:'pha提取',                x:820, y:8100, w:78,  c:'nd2-green',  dashed:true},
+  {id:'pha-2',  n:'聚羟基脂肪酸酯(PHA)',    x:940, y:8100, w:160, c:'nd2-yellow', dashed:true},
+
+  /* 甲醇支链 b：MTO → PPC (y=8260) */
+  {id:'me-1',  n:'甲醇制烯烃(MTO)', x:820, y:8260, w:130, c:'nd2-green'},
+  {id:'prop',  n:'丙烯',           x:980, y:8260, w:48,  c:'nd2-yellow'},
+  {id:'po-1x', n:'HPPO法',         x:1060, y:8260, w:78,  c:'nd2-green'},
+  {id:'epo',   n:'环氧丙烷(PO)',   x:1170, y:8260, w:108, c:'nd2-yellow'},
+  {id:'co-po', n:'共聚反应',       x:1310, y:8260, w:78,  c:'nd2-green'},
+  {id:'ppc',   n:'聚碳酸亚丙酯(PPC)', x:1420, y:8260, w:150, c:'nd2-yellow'},
+
+  /* PPC apps (6 vertical at x=1620, center y=8260) */
+  {id:'co-ppc-a1', n:'一次性膜类',         x:1620, y:8176, w:100, c:'nd2-purple'},
+  {id:'co-ppc-a2', n:'食品/药品包装',      x:1620, y:8204, w:128, c:'nd2-purple'},
+  {id:'co-ppc-a3', n:'光降解母粒',         x:1620, y:8232, w:108, c:'nd2-purple'},
+  {id:'co-ppc-a4', n:'可降解修复载体',     x:1620, y:8260, w:128, c:'nd2-purple'},
+  {id:'co-ppc-a5', n:'生物医用材料',       x:1620, y:8288, w:128, c:'nd2-purple'},
+  {id:'co-ppc-a6', n:'高阻隔包装膜',       x:1620, y:8316, w:128, c:'nd2-purple'},
+
+  /* 甲醇支链 c：银法→甲醛→液相羰基→MG-2→催化水解→GA-2 (y=8420，最终汇入开环聚合) */
+  {id:'me-2',   n:'银法加工',         x:820, y:8420, w:78,  c:'nd2-green'},
+  {id:'fmd',    n:'甲醛',             x:940, y:8420, w:48,  c:'nd2-yellow'},
+  {id:'fmd-1',  n:'液相羰基化反应',   x:1010, y:8420, w:120, c:'nd2-green'},
+  {id:'mg2',    n:'乙醇酸甲酯',       x:1160, y:8420, w:100, c:'nd2-yellow'},
+  {id:'fmd-2',  n:'催化水解-低聚反应',x:1290, y:8420, w:140, c:'nd2-green'},
+  {id:'fmd-ga', n:'乙交酯(GA)',       x:1460, y:8420, w:90,  c:'nd2-yellow'},
+
+  /* 甲醇支链 d：Reppe → BYD → BDO-1 (y=8580) */
+  {id:'me-4',   n:'Reppe法合成',      x:820, y:8580, w:90,  c:'nd2-green'},
+  {id:'byd',    n:'1,4-丁炔二醇(BYD)', x:950, y:8580, w:150, c:'nd2-yellow'},
+  {id:'byd-1',  n:'加氢反应',         x:1130, y:8580, w:78,  c:'nd2-green'},
+  {id:'bdo2',   n:'1,4-丁二醇(BDO)',  x:1240, y:8580, w:130, c:'nd2-yellow'},
+
+  /* ── BDO 下游：酯化反应 → PBS 类聚酯 (y=8800-9280) ── */
+  {id:'aa2',   n:'己二酸(AA)',        x:1180, y:8740, w:100, c:'nd2-yellow'},
+  {id:'pta2',  n:'对苯二甲酸(PTA)',   x:1180, y:8770, w:130, c:'nd2-yellow'},
+  {id:'dmc',   n:'碳酸二甲酯(DMC)',   x:1180, y:8800, w:140, c:'nd2-yellow'},
+  {id:'dpc',   n:'碳酸二苯酯(DPC)',   x:1180, y:8830, w:140, c:'nd2-yellow'},
+  {id:'est',   n:'酯化反应',          x:1360, y:8800, w:78,  c:'nd2-green'},
+  {id:'pbs',   n:'聚丁二酸丁二醇酯(PBS)颗粒',              x:1490, y:8800, w:198, c:'nd2-yellow'},
+  {id:'pbat',  n:'聚对苯二甲酸-己二酸-丁二醇酯(PBAT)颗粒', x:1490, y:8920, w:286, c:'nd2-yellow'},
+  {id:'pbsa',  n:'聚丁二酸-己二酸-丁二醇酯(PBSA)颗粒',     x:1490, y:9040, w:266, c:'nd2-yellow'},
+  {id:'pbsc',  n:'聚丁二酸-碳酸丁二醇酯(PBSC)颗粒',        x:1490, y:9160, w:248, c:'nd2-yellow'},
+  {id:'pbst',  n:'聚丁二酸-对苯二甲酸-丁二醇酯(PBST)颗粒', x:1490, y:9280, w:268, c:'nd2-yellow'},
+
+  /* PBS apps (4 vertical at x=1820, center y=8800) */
+  {id:'co-pbs-a1', n:'生物医用材料',     x:1820, y:8758, w:128, c:'nd2-purple'},
+  {id:'co-pbs-a2', n:'一次性餐具',       x:1820, y:8786, w:108, c:'nd2-purple'},
+  {id:'co-pbs-a3', n:'可降解纤维',       x:1820, y:8814, w:108, c:'nd2-purple'},
+  {id:'co-pbs-a4', n:'食品/药品包装',    x:1820, y:8842, w:128, c:'nd2-purple'},
+  /* PBAT apps (4 vertical at x=1820, center y=8920) */
+  {id:'co-pbat-a1', n:'一次性软包装',    x:1820, y:8878, w:128, c:'nd2-purple'},
+  {id:'co-pbat-a2', n:'农业地膜',        x:1820, y:8906, w:90,  c:'nd2-purple'},
+  {id:'co-pbat-a3', n:'一次性餐饮具',    x:1820, y:8934, w:108, c:'nd2-purple'},
+  {id:'co-pbat-a4', n:'纺织纤维',        x:1820, y:8962, w:90,  c:'nd2-purple'},
+  /* PBSA apps (4 vertical at x=1820, center y=9040) */
+  {id:'co-pbsa-a1', n:'食品活性包装',    x:1820, y:8998, w:128, c:'nd2-purple'},
+  {id:'co-pbsa-a2', n:'农业地膜',        x:1820, y:9026, w:90,  c:'nd2-purple'},
+  {id:'co-pbsa-a3', n:'3D打印线材',      x:1820, y:9054, w:108, c:'nd2-purple'},
+  {id:'co-pbsa-a4', n:'海洋可降解制品',  x:1820, y:9082, w:140, c:'nd2-purple'},
+  /* PBSC apps (4 vertical at x=1820, center y=9160) */
+  {id:'co-pbsc-a1', n:'可降解增韧改性剂',  x:1820, y:9118, w:148, c:'nd2-purple'},
+  {id:'co-pbsc-a2', n:'降解速率调节剂',    x:1820, y:9146, w:128, c:'nd2-purple'},
+  {id:'co-pbsc-a3', n:'生物降解聚酯相容剂',x:1820, y:9174, w:160, c:'nd2-purple'},
+  {id:'co-pbsc-a4', n:'亲水/抗静电改性剂', x:1820, y:9202, w:140, c:'nd2-purple'},
+  /* PBST apps (4 vertical at x=1820, center y=9280) */
+  {id:'co-pbst-a1', n:'发泡缓冲材料',    x:1820, y:9238, w:128, c:'nd2-purple'},
+  {id:'co-pbst-a2', n:'农业地膜',        x:1820, y:9266, w:90,  c:'nd2-purple'},
+  {id:'co-pbst-a3', n:'一次性包装膜/袋', x:1820, y:9294, w:140, c:'nd2-purple'},
+  {id:'co-pbst-a4', n:'纤维与无纺布',    x:1820, y:9322, w:128, c:'nd2-purple'},
+
+  /* ── 煤炭→煤热解→电石→乙炔→BDO-2 (下路, y=9460) ── */
+  {id:'co2-2', n:'煤热解',         x:270, y:9460, w:78,  c:'nd2-green'},
+  {id:'coke2', n:'半焦/兰炭',      x:380, y:9460, w:80,  c:'nd2-yellow'},
+  {id:'co2-3', n:'电石炉熔炼',     x:500, y:9460, w:96,  c:'nd2-green'},
+  {id:'cac2',  n:'电石',           x:630, y:9460, w:48,  c:'nd2-yellow'},
+  {id:'co2-4', n:'电石炉水解',     x:710, y:9460, w:96,  c:'nd2-green'},
+  {id:'c2h2',  n:'乙炔',           x:840, y:9460, w:48,  c:'nd2-yellow'},
+  {id:'ac-1',  n:'乙炔-醋酸气相加成反应', x:920, y:9460, w:178, c:'nd2-green'},
+  {id:'vac',   n:'醋酸乙烯',       x:1130, y:9460, w:80,  c:'nd2-yellow'},
+  {id:'ac-2',  n:'加氢精制',       x:1240, y:9460, w:78,  c:'nd2-green'},
+  {id:'bdo3',  n:'1,4-丁二醇(BDO)',x:1350, y:9460, w:130, c:'nd2-yellow'},
+
+  /* ══════════ 石油基 / 石油 (y 9600-10110) ══════════ */
+  {id:'oil',   n:'石油', x:170, y:9870, w:60, h:40, c:'nd2-orange'},
+  {id:'oi-1',  n:'常减压蒸馏', x:280, y:9870, w:90, c:'nd2-green'},
+
+  /* 常减压蒸馏 2 输出：石油焦 (上) + 石脑油 (主轴) */
+  {id:'oi-p1', n:'石油焦', x:410, y:9600, w:60, c:'nd2-yellow'},
+  {id:'oi-p2', n:'石脑油', x:410, y:9870, w:60, c:'nd2-yellow'},
+
+  /* 石油焦支线 (上, 燃料/合成气路线) */
+  {id:'oi-ox',  n:'部分氧化', x:500, y:9600, w:78, c:'nd2-green'},
+  {id:'oi-syn', n:'合成气',   x:610, y:9600, w:60, c:'nd2-yellow'},
+
+  /* 石脑油→催化重整→重整油→芳烃抽提 (主轴, y=9870) */
+  {id:'oi-2',  n:'催化重整', x:500, y:9870, w:78, c:'nd2-green'},
+  {id:'oi-p3', n:'重整油',   x:610, y:9870, w:60, c:'nd2-yellow'},
+  {id:'oi-3',  n:'芳烃抽提', x:700, y:9870, w:78, c:'nd2-green'},
+
+  /* ── 上分支：混合芳烃→PX→PTA→PBAT (y=9740) ── */
+  {id:'oi-p4',   n:'混合芳烃',                       x:820, y:9740, w:78,  c:'nd2-yellow'},
+  {id:'oi-4',    n:'异构化处理',                     x:940, y:9740, w:96,  c:'nd2-green'},
+  {id:'oi-px',   n:'对二甲苯(PX)',                   x:1080, y:9740, w:108, c:'nd2-yellow'},
+  {id:'oi-5',    n:'氧化反应',                       x:1220, y:9740, w:78,  c:'nd2-green'},
+  {id:'oi-pta',  n:'精对苯二甲酸(PTA)',              x:1340, y:9740, w:156, c:'nd2-yellow'},
+  {id:'oi-6',    n:'酯化/酯交换反应',                x:1520, y:9740, w:130, c:'nd2-green'},
+  {id:'oi-pbat', n:'聚己二酸-对苯二甲酸丁二醇酯(PBAT)', x:1690, y:9740, w:286, c:'nd2-yellow'},
+
+  /* PBAT-石油 应用 (4) */
+  {id:'oi-pbat-a1', n:'一次性软包装', x:2010, y:9698, w:128, c:'nd2-purple'},
+  {id:'oi-pbat-a2', n:'农业地膜',     x:2010, y:9726, w:90,  c:'nd2-purple'},
+  {id:'oi-pbat-a3', n:'一次性餐饮具', x:2010, y:9754, w:108, c:'nd2-purple'},
+  {id:'oi-pbat-a4', n:'纺织纤维',     x:2010, y:9782, w:90,  c:'nd2-purple'},
+
+  /* ── 下分支：苯提取→环己烷→KA油 (y=10000) ── */
+  {id:'oi-7',  n:'苯提取',       x:820, y:10000, w:78,  c:'nd2-green'},
+  {id:'oi-p5', n:'石油苯',       x:940, y:10000, w:60,  c:'nd2-yellow'},
+  {id:'oi-8',  n:'加氢反应',     x:1030, y:10000, w:78, c:'nd2-green'},
+  {id:'oi-p6', n:'环己烷',       x:1150, y:10000, w:60, c:'nd2-yellow'},
+  {id:'oi-9',  n:'液相催化氧化', x:1240, y:10000, w:108, c:'nd2-green'},
+  {id:'oi-ka', n:'环己酮/环己醇混合物(KA油)', x:1390, y:10000, w:230, c:'nd2-yellow'},
+
+  /* KA油 上支：硝酸氧化 → AA */
+  {id:'oi-10', n:'硝酸氧化', x:1650, y:9940, w:78,  c:'nd2-green'},
+  {id:'oi-aa', n:'己二酸(AA)', x:1770, y:9940, w:100, c:'nd2-yellow'},
+
+  /* KA油 下支：KA油脱氢→环己酮→酮类氧化→ε-己内酯→开环聚合→PCL (y=10060) */
+  {id:'oi-11', n:'KA油脱氢与精馏', x:1650, y:10060, w:130, c:'nd2-green'},
+  {id:'oi-p7', n:'环己酮',         x:1820, y:10060, w:60,  c:'nd2-yellow'},
+  {id:'oi-12', n:'酮类氧化反应',   x:1920, y:10060, w:108, c:'nd2-green'},
+  {id:'oi-cl', n:'ε-己内酯',       x:2070, y:10060, w:78,  c:'nd2-yellow'},
+  {id:'oi-13', n:'开环聚合',       x:2190, y:10060, w:78,  c:'nd2-green'},
+  {id:'oi-pcl', n:'聚己内酯(PCL)', x:2300, y:10060, w:120, c:'nd2-yellow'},
+
+  /* PCL 应用 (4) */
+  {id:'oi-pcl-a1', n:'医疗可降解耗材',   x:2460, y:10018, w:140, c:'nd2-purple'},
+  {id:'oi-pcl-a2', n:'食品包装与日用品', x:2460, y:10046, w:148, c:'nd2-purple'},
+  {id:'oi-pcl-a3', n:'可降解地膜',       x:2460, y:10074, w:108, c:'nd2-purple'},
+  {id:'oi-pcl-a4', n:'3D打印柔性耗材',   x:2460, y:10102, w:140, c:'nd2-purple'},
+
+];
+
+const L2 = [
+  /* ROOT → 路线 */
+  ['r','rtBio'],['r','rtPet'],
+
+  /* 生物基 → 各类原料 */
+  ['rtBio','plMat'],['rtBio','animBase'],
+  ['animBase','anPr'],['animBase','anOil'],['animBase','biChi'],
+
+  /* 植物体 → 子原料 */
+  ['plMat','starch'],['plMat','cell'],['plMat','hcell'],['plMat','plOil'],['plMat','plPr'],['plMat','plGel'],
+
+  /* ════ 淀粉 三大支链 ════ */
+  ['starch','st-1'],['starch','st-2'],
+  /* TPS 链 */
+  ['st-1','st-p1',{eq:'单螺杆挤出机、高速粉碎机'}],
+  ['st-p1','st-tps0'],
+  ['st-tps0','st-tps',{eq:'高速混合机、捏合机、造粒机', rg:'丙三醇/山梨糖醇、硅烷偶联剂/钛酸酯偶联剂、单硬脂酸甘油酯/甘油单硬脂酸酯、柠檬酸/枸橼酸'}],
+  ['st-tps','st-mix'],
+  ['st-mix','st-tps2',{eq:'同向双螺杆机、水下切粒系统', rg:'PBAT、PLA、PBS、润滑剂、抗氧剂'}],
+  /* 糖化液 链 */
+  ['st-2','st-p2',{eq:'双螺杆挤压膨化机、高速粉碎机、酶解罐', rg:'盐酸/氢氯酸、耐高温α-淀粉酶/液化型α-淀粉酶、二氧化硅/Fumed Silica/水合二氧化硅'}],
+  ['st-p2','st-hyd'],
+  ['st-hyd','glcs',{eq:'高压反应釜、糖化罐', rg:'盐酸/氢氯酸/稀盐酸、葡萄糖、淀粉酶、活性炭'}],
+  ['glcs','glcs-1'],['glcs','glcs-2'],
+  ['glcs-1','lac-m',{eq:'发酵罐、连续搅拌釜式反应器、陶瓷/无机陶瓷/PES 超滤膜、结晶器', rg:'德氏乳杆菌保加利亚亚种/嗜热链球菌、植物乳杆菌/干酪乳杆菌'}],
+  ['lac-m','lac-p'],
+  ['lac-p','pla',{eq:'开环聚合反应釜（丙交酯开环聚合釜）/聚缩合反应釜（乳酸直接缩聚釜）', rg:'辛酸亚锡/二(2-乙基己酸)亚锡、抗氧剂'}],
+  ['glcs-2','st-pha',{eq:'种子罐、发酵罐、高速离心机、碱解罐/酶解罐、干燥机', rg:'嗜盐单胞菌/重组大肠杆菌/罗尔斯通氏菌(钩虫贪铜菌)、聚醚改性聚硅氧烷消泡剂'}],
+  /* 应用连接 */
+  ['st-tps2','st-app-1'],['st-tps2','st-app-2'],['st-tps2','st-app-3'],['st-tps2','st-app-4'],['st-tps2','st-app-5'],
+  ['pla','pla-app-1'],['pla','pla-app-2'],['pla','pla-app-3'],['pla','pla-app-4'],['pla','pla-app-5'],
+  ['st-pha','pha-app-1'],['st-pha','pha-app-2'],['st-pha','pha-app-3'],['st-pha','pha-app-4'],['st-pha','pha-app-5'],
+
+  /* ════ 纤维素 8 大支链 ════ */
+  ['cell','cl-1'],['cell','cl-2'],['cell','cl-3'],['cell','cl-4'],['cell','cl-5'],['cell','cl-6'],['cell','cl-7'],['cell','cl-8'],
+  /* 1. 破碎打浆 → 纸浆 */
+  ['cl-1','cl-p1',{eq:'破碎机、蒸煮锅、洗浆机、打浆机', rg:'碱液、二氧化氯/过氧化氢(双氧水)、淀粉、浆内施胶剂、滑石粉'}],
+  /* 2. 溶解成型 → 再生膜/Lyocell */
+  ['cl-2','cl-p2',{eq:'密闭搅拌反应釜、精密过滤器、流延机(膜用)、纺丝机(纤维用)', rg:'离子液体、增塑剂、抗迁移/阻隔助剂、凝固浴试剂'}],
+  /* 3. 发泡处理 → 多孔材料 (虚线) */
+  ['cl-3','cl-p3',{eq:'高速搅拌机、浓缩机、热压发泡机、模具、干燥机、切割机', rg:'发泡剂、粘接剂、增塑剂'}],
+  /* 4. 酯化反应 → 醋酸纤维素塑料 */
+  ['cl-4','cl-p4',{eq:'密闭反应釜、过滤机、干燥箱、挤出造粒机、注塑机/流延机', rg:'醋酸酐、浓硫酸、丙酮、增塑剂、反应终止/中和试剂'}],
+  /* 5. 接枝共聚 → 可降解吸水树脂 */
+  ['cl-5','cl-p5',{eq:'恒温搅拌反应釜、超声分散仪、干燥箱、粉碎机', rg:'丙烯酸、引发剂、交联剂、反应终止/中和试剂'}],
+  /* 6. 水热醇解 → MG → 精馏 → 乙醇酸 → 预聚-降膜 → 粗乙交酯 → 熔融结晶 → PGA */
+  ['cl-6','cl-mg',{eq:'高压反应釜', rg:'甲醇、催化剂'}],
+  ['cl-mg','cl-rec',{eq:'填料反应精馏塔', rg:'固定床催化剂'}],
+  ['cl-rec','cl-ua'],
+  ['cl-ua','cl-pre',{eq:'降膜蒸发器、裂解管', rg:'阻聚剂、分子筛'}],
+  ['cl-pre','cl-pga0'],
+  ['cl-pga0','cl-melt',{eq:'熔融结晶器、聚合釜', rg:'食品级催化剂、分子量调节剂'}],
+  ['cl-melt','cl-pga'],
+  /* 7. 微生物发酵 → 乳酸单体 → 聚合 → PLA */
+  ['cl-7','cl-lac',{eq:'种子罐、厌氧发酵罐', rg:'水解试剂、发酵添加剂'}],
+  ['cl-lac','cl-pol'],
+  ['cl-pol','cl-pla',{eq:'开环聚合釜/聚缩反应釜', rg:'环化催化剂、稳定剂'}],
+  /* 8. 酶解发酵 → PHA前体 → PHA提取 → PHA (全虚线) */
+  ['cl-8','cl-php',{eq:'好氧发酵罐、恒温酶解反应釜、离心机', rg:'酶解液、产 PHA 菌株'}],
+  ['cl-php','cl-phe'],
+  ['cl-phe','cl-pha',{eq:'超声细胞破碎仪、高压均质机、索氏提取器、干燥箱', rg:'氯仿(溶剂)、甲醇/乙醇、增塑剂'}],
+  /* PGA 链 → 7 应用 */
+  ['cl-pga','cl-pga-app-1'],['cl-pga','cl-pga-app-2'],['cl-pga','cl-pga-app-3'],
+  ['cl-pga','cl-pga-app-4'],['cl-pga','cl-pga-app-5'],['cl-pga','cl-pga-app-6'],['cl-pga','cl-pga-app-7'],
+
+  /* ════ 半纤维素 6 大支链 ════ */
+  ['hcell','hc-1'],['hcell','hc-2'],['hcell','hc-3'],['hcell','hc-4'],['hcell','hc-5'],['hcell','hc-6'],
+  /* 1) 复合工艺 → 3 种聚糖薄膜 */
+  ['hc-1','hc-p1'],['hc-1','hc-p2'],['hc-1','hc-p3'],
+  ['hc-p1','hc-app-1'],['hc-p2','hc-app-2'],['hc-p3','hc-app-3'],
+  /* 2) 发酵聚合 → 酶解发酵 → PHA */
+  ['hc-2','hc-2b',{eq:'好氧发酵罐、恒温酶解反应釜、离心机', rg:'酶解液、产 PHA 菌株'}],
+  ['hc-2b','hc-php'],['hc-php','hc-phe'],
+  ['hc-phe','hc-pha',{eq:'超声细胞破碎仪、高压均质机、索氏提取器、干燥箱', rg:'氯仿(溶剂)、甲醇/乙醇、增塑剂'}],
+  /* 3) 碱溶 → 水凝胶 + 4 apps */
+  ['hc-3','hc-p4',{eq:'恒温水浴锅', rg:'5% NaOH 水溶液'}],
+  ['hc-p4','hc-3b',{eq:'恒温烘箱/低温冷藏箱、聚四氟乙烯模具', rg:'交联剂、戊二醛'}],
+  ['hc-3b','hc-p5'],
+  ['hc-p5','hc-app-4'],['hc-p5','hc-app-5'],['hc-p5','hc-app-6'],['hc-p5','hc-app-7'],
+  /* 4) 溶解交联 → 复合生物胶 + 2 apps */
+  ['hc-4','hc-p6',{eq:'磁力搅拌器、超声分散仪、室温搅拌反应釜', rg:'稀氢氧化钠溶液、壳聚糖溶液、京尼平交联试剂'}],
+  ['hc-p6','hc-4b',{eq:'冷冻干燥机、模具', rg:''}],
+  ['hc-4b','hc-p7'],
+  ['hc-p7','hc-app-8'],['hc-p7','hc-app-9'],
+  /* 5) 活化 → 溶液 → 接枝制备 → 吸附剂 + 2 apps */
+  ['hc-5','hc-p8',{eq:'恒温搅拌反应釜', rg:'环氧氯丙烷(交联活化剂)、氢氧化钠'}],
+  ['hc-p8','hc-5b',{eq:'恒温磁力搅拌反应釜、聚四氟乙烯模具', rg:'交联剂、改性试剂'}],
+  ['hc-5b','hc-p9'],
+  ['hc-p9','hc-app-10'],['hc-p9','hc-app-11'],
+  /* 6) 稀酸水解 → 糠醛 → 氧化酯化 → FDME → 缩聚反应 → PEF + 4 apps */
+  ['hc-6','furf',{eq:'连续水解塔', rg:'硫酸'}],
+  ['furf','furf-1',{eq:'固定床催化反应器', rg:'甲醇'}],
+  ['furf-1','fdme'],
+  ['fdme','fdme-1',{eq:'缩聚反应釜', rg:'聚缩催化剂'}],
+  ['fdme-1','pef'],
+  ['pef','hc-app-12'],['pef','hc-app-13'],['pef','hc-app-14'],['pef','hc-app-15'],
+
+  /* 棉麻（植物基原料的另一独立子原料） */
+
+  /* 植物油脂 3 大支链 */
+  ['plOil','po-1'],['plOil','po-2'],['plOil','po-3'],
+  /* Branch 1: 油脂水解 → FAPO 链 */
+  ['po-1','po-p1',{eq:'连续皂化塔', rg:'10% 氢氧化钠水溶液'}],
+  ['po-p1','po-1b'],
+  ['po-1b','po-p1b',{eq:'带冷却盘管搪玻璃反应釜', rg:'双氧水、乙酸、催化剂'}],
+  ['po-p1b','po-1c'],
+  ['po-1c','po-p7',{eq:'减压酯化釜', rg:'甘油、氧化铁催化剂'}],
+  /* FAPO 3 子工艺 */
+  ['po-p7','po-fapo-1'],['po-p7','po-fapo-2'],['po-p7','po-fapo-3'],
+  ['po-fapo-1','po-fapo-p1',{eq:'降膜蒸发器、高速混合头、钢带浇注机、烘箱', rg:'二月桂酸二丁基锡、1,4-BDO 扩链剂'}],
+  ['po-fapo-2','po-fapo-p2',{eq:'同向双螺杆、水下切粒机', rg:'抗氧剂、硬脂酸钙'}],
+  ['po-fapo-3','po-fapo-p3',{eq:'高压发泡机、烘箱', rg:'发泡型胺催化剂、稳定剂/匀泡剂'}],
+  ['po-fapo-p1','po-fapo-app-1'],['po-fapo-p1','po-fapo-app-2'],['po-fapo-p1','po-fapo-app-3'],
+  ['po-fapo-p2','po-fapo-app-4'],['po-fapo-p2','po-fapo-app-5'],
+  ['po-fapo-p3','po-fapo-app-6'],['po-fapo-p3','po-fapo-app-7'],
+  /* Branch 2: 环氧反应 → WPU 胶膜 链 */
+  ['po-2','po-p2',{eq:'玻璃反应釜', rg:'双氧水、甲酸、固体酸催化剂'}],
+  ['po-p2','po-2b'],
+  ['po-2b','po-p6',{eq:'回流反应器', rg:'甲醇'}],
+  ['po-p6','po-2c'],
+  ['po-2c','po-p5',{eq:'高剪切分散釜', rg:'异氰酸酯、亲水基团中和剂'}],
+  ['po-p5','po-2d'],
+  ['po-2d','po-p4',{eq:'真空蒸馏装置、聚四氟乙烯模板', rg:''}],
+  ['po-p4','po-wpu-app-1'],['po-p4','po-wpu-app-2'],['po-p4','po-wpu-app-3'],
+  ['po-p4','po-wpu-app-4'],['po-p4','po-wpu-app-5'],['po-p4','po-wpu-app-6'],['po-p4','po-wpu-app-7'],
+  /* Branch 3: pha提取 → PHA */
+  ['po-3','po-p3',{eq:'发酵罐、恒温酶解反应釜、离心机、超声细胞破碎仪、索氏提取器、双螺杆挤出机', rg:'生物催化剂、产 PHA 菌株、三氯甲烷(溶剂)、甲醇'}],
+
+  /* 植物蛋白 4 大支链 */
+  ['plPr','pp-1'],['plPr','pp-2'],['plPr','pp-3'],['plPr','pp-4'],
+  /* Branch 1: 糊制备 → 发泡热成型 → 缓冲发泡材料 */
+  ['pp-1','pp-p1',{eq:'高速搅拌机、胶体磨', rg:'植物蛋白粉末、去离子水'}],
+  ['pp-p1','pp-1b'],
+  ['pp-1b','pp-p1b',{eq:'热压发泡机、冷冻干燥机、烘箱', rg:''}],
+  ['pp-p1b','pp-app-1'],['pp-p1b','pp-app-2'],['pp-p1b','pp-app-3'],['pp-p1b','pp-app-4'],
+  /* Branch 2: 蛋白超细粉碎 → 蛋白超细粉 → 2 产品 */
+  ['pp-2','pp-p2',{eq:'超微粉碎机、热风循环烘箱', rg:''}],
+  ['pp-p2','pp-2a'],['pp-p2','pp-2b'],
+  ['pp-2a','pp-p2a',{eq:'双螺杆挤出机、模压机、注塑机、吹塑机', rg:'丙三醇/山梨糖醇/聚乙二醇/柠檬酸三乙酯、转谷氨酰胺酶(TG 酶)/氯化钙/京尼平、硬脂酸钙/硬脂酸锌'}],
+  ['pp-p2a','pp-app-5'],['pp-p2a','pp-app-6'],['pp-p2a','pp-app-7'],['pp-p2a','pp-app-8'],['pp-p2a','pp-app-9'],
+  ['pp-2b','pp-p2b',{eq:'真空脱泡机、高速分散机、聚四氟乙烯模具、热风干燥箱', rg:'丙三醇/山梨醇/聚乙二醇/单甘脂/单双甘脂、聚乳酸/PBAT/淀粉/壳聚糖、无水柠檬酸/氯化钙/单宁酸'}],
+  ['pp-p2b','pp-app-10'],['pp-p2b','pp-app-11'],['pp-p2b','pp-app-12'],['pp-p2b','pp-app-13'],
+  /* Branch 3: 蛋白提取与溶解 → 水溶液 → 胺化改性 → 氨基化蛋白溶液 → 成型干燥 → 氨基化蛋白粉末 → 交联固化 → 包装膜 */
+  ['pp-3','pp-p3',{eq:'离心机、恒温水浴锅、磁力搅拌器', rg:'氢氧化钠溶液、去离子水'}],
+  ['pp-p3','pp-3b'],
+  ['pp-3b','pp-p3b',{eq:'密闭反应釜', rg:'乙二胺/二乙烯三胺/L-赖氨酸盐酸盐'}],
+  ['pp-p3b','pp-3c'],
+  ['pp-3c','pp-p3c',{eq:'喷雾干燥机', rg:''}],
+  ['pp-p3c','pp-3d'],
+  ['pp-3d','pp-p3d',{eq:'管式炉', rg:'无水柠檬酸/京尼平/转谷氨酰胺酶(TG 酶)/戊二醛'}],
+  ['pp-p3d','pp-app-14'],['pp-p3d','pp-app-15'],['pp-p3d','pp-app-16'],['pp-p3d','pp-app-17'],
+  /* Branch 4: 蛋白活化 → 活化蛋白溶液 → 造粒/成型 → 吸附剂颗粒 + 8 apps */
+  ['pp-4','pp-p4',{eq:'恒温搅拌反应釜、高速立式搅拌机', rg:''}],
+  ['pp-p4','pp-4b'],
+  ['pp-4b','pp-p4b'],
+  ['pp-p4b','pp-app-18'],['pp-p4b','pp-app-19'],['pp-p4b','pp-app-20'],['pp-p4b','pp-app-21'],
+  ['pp-p4b','pp-app-22'],['pp-p4b','pp-app-23'],['pp-p4b','pp-app-24'],['pp-p4b','pp-app-25'],
+
+  /* 植物胶体 */
+  /* 植物胶体 3 大支链 */
+  ['plGel','pg-1'],['plGel','pg-2'],['plGel','pg-3'],
+  /* Branch 1: 溶胶-凝胶浇铸 → 果胶纤维素膜（虚线） */
+  ['pg-1','pg-p1'],
+  /* Branch 2: 胶体碱溶 → 果胶水溶液 → 成膜固化 → 食用薄膜 */
+  ['pg-2','pg-p2',{eq:'恒温搅拌釜、超声分散仪', rg:'去离子水'}],
+  ['pg-p2','pg-2b'],
+  ['pg-2b','pg-p2b',{eq:'涂膜器、鼓风烘箱', rg:'丙三醇/山梨醇/聚乙二醇/氯化钙/乳酸钙'}],
+  ['pg-p2b','pg-app-1'],['pg-p2b','pg-app-2'],['pg-p2b','pg-app-3'],['pg-p2b','pg-app-4'],['pg-p2b','pg-app-5'],
+  /* Branch 3: 胶体-淀粉改性 → 玉米淀粉胶体 → 熔融共混 → 热熔胶粒 → 7 apps */
+  ['pg-3','pg-p3',{eq:'高搅机', rg:'玉米淀粉、黄原胶'}],
+  ['pg-p3','pg-3b'],
+  ['pg-3b','pg-p3b',{eq:'双螺杆挤出机', rg:'萜烯树脂、聚乙烯蜡、抗氧剂'}],
+  ['pg-p3b','pg-app-6'],['pg-p3b','pg-app-7'],['pg-p3b','pg-app-8'],['pg-p3b','pg-app-9'],
+  ['pg-p3b','pg-app-10'],['pg-p3b','pg-app-11'],['pg-p3b','pg-app-12'],
+
+  /* 动物蛋白 */
+  /* 动物蛋白 → 4 子蛋白 */
+  ['anPr','ap-k'],['anPr','ap-m'],['anPr','ap-c'],['anPr','ap-s'],
+  /* 角蛋白链 */
+  ['ap-k','ap-pk',{eq:'恒温回流反应釜、抽滤装置', rg:'还原剂: 亚硫酸钠/焦亚硫酸钠/亚硫酸氢钠; 氧化剂: 过氧化氢; 离子液体: 1-丁基-3-甲基咪唑氯盐[BMIM]Cl'}],
+  ['ap-pk','ap-pk2'],
+  ['ap-pk2','ap-pk3',{eq:'离心机、透析系统', rg:'去离子水'}],
+  ['ap-pk3','ap-pk4'],
+  ['ap-pk4','ap-fm1',{eq:'高速混合机、双螺杆挤出机、热压机、静电纺丝机', rg:'增塑剂: 甘油/山梨醇/聚乙二醇; 交联剂: 双醛淀粉/无水柠檬酸; 增强/共混聚合物: PVA/PLA/淀粉'}],
+  ['ap-fm1','ap-r1a'],['ap-fm1','ap-r1b'],['ap-fm1','ap-r1c'],['ap-fm1','ap-r1d'],
+  ['ap-r1a','ap-ra1-1'],['ap-r1a','ap-ra1-2'],['ap-r1a','ap-ra1-3'],['ap-r1a','ap-ra1-4'],
+  ['ap-r1b','ap-ra2-1'],['ap-r1b','ap-ra2-2'],
+  ['ap-r1c','ap-ra3-1'],['ap-r1c','ap-ra3-2'],['ap-r1c','ap-ra3-3'],['ap-r1c','ap-ra3-4'],
+  ['ap-r1d','ap-ra4-1'],['ap-r1d','ap-ra4-2'],['ap-r1d','ap-ra4-3'],['ap-r1d','ap-ra4-4'],['ap-r1d','ap-ra4-5'],
+  /* 明胶链 */
+  ['ap-m','ap-pm',{eq:'高温高压提取罐、真空浓缩器、板框过滤机、列管式冷凝器、离子交换柱、真空蒸发器', rg:'去离子水、石灰水(碱法)、活性炭、强酸性阳离子/弱碱性阴离子交换树脂'}],
+  ['ap-pm','ap-pm2'],
+  ['ap-pm2','ap-fm2',{eq:'流延机、真空鼓式干燥机、冷冻干燥机、搅拌机、喷雾干燥机', rg:'增塑剂: 甘油/山梨醇; 交联剂: 双醛淀粉/单宁酸'}],
+  ['ap-fm2','ap-r2a'],['ap-fm2','ap-r2b'],['ap-fm2','ap-r2c'],
+  ['ap-r2a','ap-rm1-1'],['ap-r2a','ap-rm1-2'],['ap-r2a','ap-rm1-3'],
+  ['ap-r2b','ap-rm2-1'],['ap-r2b','ap-rm2-2'],
+  ['ap-r2c','ap-rm3-1'],['ap-r2c','ap-rm3-2'],
+  /* 胶原蛋白链 */
+  ['ap-c','ap-pc',{eq:'恒温反应釜、超滤膜装置、高速离心机、透析系统', rg:'1398中性蛋白酶、风味蛋白酶、醋酸、磷酸缓冲液、去离子水'}],
+  ['ap-pc','ap-pc2'],
+  ['ap-pc2','ap-fm3',{eq:'搅拌反应釜、静电纺丝机、冷冻干燥机、真空干燥箱', rg:'交联剂: 1-乙基-3-碳二亚胺(EDC)/N-羟基琥珀酰亚胺(NHS)/双醛淀粉(DAS)/原花青素(PC)/京尼平; 磷酸盐缓冲液; 增塑剂: 甘油/山梨醇/聚乙二醇'}],
+  ['ap-fm3','ap-r3a'],['ap-fm3','ap-r3b'],['ap-fm3','ap-r3c'],['ap-fm3','ap-r3d'],
+  ['ap-r3a','ap-rc1-1'],['ap-r3a','ap-rc1-2'],['ap-r3a','ap-rc1-3'],
+  ['ap-r3b','ap-rc2-1'],['ap-r3b','ap-rc2-2'],['ap-r3b','ap-rc2-3'],
+  ['ap-r3c','ap-rc3-1'],['ap-r3c','ap-rc3-2'],['ap-r3c','ap-rc3-3'],
+  ['ap-r3d','ap-rc4-1'],['ap-r3d','ap-rc4-2'],['ap-r3d','ap-rc4-3'],['ap-r3d','ap-rc4-4'],['ap-r3d','ap-rc4-5'],
+  /* 丝蛋白链 */
+  ['ap-s','ap-ps',{eq:'脱胶锅(沸煮)、溶解罐(加热)、高速离心机、透析系统', rg:'复合型丝脱胶剂、乙醇、去离子水'}],
+  ['ap-ps','ap-ps2'],
+  ['ap-ps2','ap-fm4',{eq:'聚四氟乙烯模具、静电纺丝机、冷冻干燥机、涂布机、低温恒温循环水槽、超声细胞破碎仪', rg:'交联剂: 1-乙基-3-碳二亚胺(EDC)/N-羟基琥珀酰亚胺(NHS)/京尼平'}],
+  ['ap-fm4','ap-r4a'],['ap-fm4','ap-r4b'],
+  ['ap-r4a','ap-rs1-1'],['ap-r4a','ap-rs1-2'],['ap-r4a','ap-rs1-3'],
+  ['ap-r4b','ap-rs2-1'],['ap-r4b','ap-rs2-2'],['ap-r4b','ap-rs2-3'],
+
+  /* 动物油脂 */
+  /* 动物油脂 3 大支链 */
+  ['anOil','ao-1'],['anOil','ao-2'],['anOil','ao-4'],
+  /* Branch 1: 提取纯化 → 脂肪酸甲酯/乙酯粗品 → 分离精制 → 脂肪酸甲酯/乙酯 → 4 apps */
+  ['ao-1','ao-p1',{eq:'酯化反应釜、搅拌器、冷凝器', rg:'甲醇/乙醇、氢氧化钠/氢氧化钾、甲醇钠'}],
+  ['ao-p1','ao-pm',{eq:'分液漏斗、蒸馏塔', rg:'硫酸'}],
+  ['ao-pm','ao-p2'],
+  ['ao-p2','ao-app-1'],['ao-p2','ao-app-2'],['ao-p2','ao-app-3'],['ao-p2','ao-app-4'],
+  /* Branch 2: 加氢还原 → 脂肪醇 → 开环共聚 → PCL → 5 apps */
+  ['ao-2','ao-p3',{eq:'固定床反应器、高压混合器、高压分离器', rg:'Cu/ZnO/Al₂O₃'}],
+  ['ao-p3','ao-3',{eq:'分子筛干燥器、真空脱水系统', rg:'辛酸亚锡'}],
+  ['ao-3','ao-p4',{eq:'聚合反应釜、真空系统', rg:'己内酯单体、辛酸亚锡催化剂、抗氧剂'}],
+  ['ao-p4','ao-app-5'],['ao-p4','ao-app-6'],['ao-p4','ao-app-7'],['ao-p4','ao-app-8'],['ao-p4','ao-app-9'],
+  /* Branch 3: pha提取 → PHA */
+  ['ao-4','ao-p5',{eq:'种子罐、pH 控制器、溶氧仪、高压均质机、离心分离机、干燥箱', rg:'产 PHA 菌种 Cupriavidus necator、氮源 (尿素/氯化铵/硫酸铵)、无机盐 (磷酸二氢钾/碳酸氢钠)、消泡剂、氯仿、次氯酸钠'}],
+
+  /* 生物甲壳 */
+  ['biChi','bc-1'],
+  ['bc-1','bc-p1',{eq:'耐腐蚀反应釜、恒温水浴/加热设备、真空过滤器、离心机/洗涤设备', rg:'脱乙酰化剂: 氢氧化钠; 活性炭/木炭; 盐酸'}],
+  ['bc-p1','bc-2'],
+  ['bc-2','bc-p2',{eq:'离心机、烘箱/喷雾干燥塔、粉碎机', rg:'润滑剂: 硬脂酸镁/微粉硅胶; 抗氧化剂: BHA/BHT/TBHQ/抗坏血酸/抗坏血酸棕榈酸酯'}],
+  /* Branch 1: 溶解提取 → 流延成膜 → 壳聚糖膜 */
+  ['bc-p2','bc-3'],
+  ['bc-3','bc-p3',{eq:'搅拌溶解罐', rg:'乙酸/柠檬酸(溶剂); 增塑剂: 甘油/山梨醇'}],
+  ['bc-p3','bc-4'],
+  ['bc-4','bc-p4',{eq:'流延机或手工流延台、刮刀、鼓风干燥箱', rg:'戊二醛'}],
+  ['bc-p4','bc-app-1'],['bc-p4','bc-app-2'],['bc-p4','bc-app-3'],
+  /* Branch 2: 纺丝制备 → 壳聚糖纤维 */
+  ['bc-p2','bc-5'],
+  ['bc-5','bc-p5',{eq:'高速搅拌溶解罐、脱泡机、湿法纺丝机、拉伸辊、系列洗涤槽', rg:'乙酸; 纺丝助剂: PVA、PEO+聚氧化乙烯; 凝固剂: 氢氧化钠; 乙醇溶液; 交联剂'}],
+  ['bc-p5','bc-app-4'],['bc-p5','bc-app-5'],['bc-p5','bc-app-6'],
+  /* Branch 3: 溶液与共混 → 复合浆料 → 注模冷冻 → 多孔干凝胶支架 → 交联固化 → 壳聚糖交联支架 */
+  ['bc-p2','bc-6'],
+  ['bc-6','bc-p6',{eq:'搅拌共混机', rg:'磷灰石粉末'}],
+  ['bc-p6','bc-7'],
+  ['bc-7','bc-p7',{eq:'模具、低温冰箱、冷冻干燥机', rg:''}],
+  ['bc-p7','bc-8'],
+  ['bc-8','bc-p8',{eq:'交联反应釜', rg:'戊二醛/京尼平/京尼平酸'}],
+  ['bc-p8','bc-app-7'],['bc-p8','bc-app-8'],['bc-p8','bc-app-9'],['bc-p8','bc-app-10'],
+
+  /* ══ 石油基 → 煤炭 / 石油 ══ */
+  ['rtPet','coal2'],['rtPet','oil'],
+
+  /* 煤炭 → 气化路线 + 煤热解 */
+  ['coal2','co2-1'],['coal2','co2-2'],
+
+  /* 气化 → 合成气 */
+  ['co2-1','syn',{eq:'多喷嘴对置式气化炉/航天炉/晋华炉、高温陶瓷过滤器、低温甲醇洗装置、胺法脱硫脱碳装置、有机硫水解反应器、精脱硫吸附塔、分子筛干燥器'}],
+
+  /* 合成气支链 1：DMO → PGA */
+  ['syn','sg-1',{eq:'列管式固定床反应器/管壳式反应器、酯化塔、精馏塔', rg:'亚硝酸甲酯、DMO 合成钯系催化剂'}],
+  ['sg-1','dmo'],
+  ['dmo','dmo-1',{eq:'加氢反应器、精馏塔', rg:'草酸酯加氢铜基催化剂、氢气'}],
+  ['dmo-1','mg'],
+  ['mg','mg-1',{eq:'水解釜、结晶器、精馏塔、解聚釜', rg:'钛系酯化催化剂/锡系酯化催化剂/复合系催化剂'}],
+  ['mg-1','ua'],
+  ['ua','ua-2',{eq:'聚合釜、脱挥器、切粒机', rg:'有机锡催化剂（如辛酸亚锡）'}],
+  ['ua-2','pga'],
+
+  /* PGA → 应用 */
+  ['pga','co-pga-a1'],['pga','co-pga-a2'],['pga','co-pga-a3'],['pga','co-pga-a4'],
+  ['pga','co-pga-a5'],['pga','co-pga-a6'],['pga','co-pga-a7'],
+
+  /* 合成气支链 2：PHA 提取（虚线红） */
+  ['syn','sg-3',{eq:'气体发酵生物反应器、冷却系统、细胞破碎机、离心机、萃取塔、干燥机、沉淀釜', rg:'特殊工程菌株、无机盐营养液、消泡剂、溶剂(氯仿/丙酮)、破乳剂'}],
+  ['sg-3','pha2'],
+
+  /* PHA → 应用 */
+  ['pha2','co-pha-a1'],['pha2','co-pha-a2'],['pha2','co-pha-a3'],
+  ['pha2','co-pha-a4'],['pha2','co-pha-a5'],['pha2','co-pha-a6'],
+
+  /* 合成气支链 3：甲醇合成 → 甲醇 */
+  ['syn','sg-2',{eq:'甲醇合成塔、甲醇精馏塔(专用)', rg:'铜-锌-铝系低温甲醇合成催化剂/铜基甲醇合成催化剂/CZA 催化剂'}],
+  ['sg-2','meoh'],
+
+  /* 甲醇支链 a：pha 提取（虚线红，另一路 PHA） */
+  ['meoh','me-pha',{eq:'甲醇储罐、精密过滤器、活性炭脱与塔、不锈钢发酵罐', rg:'硫酸铵、磷酸二氢钠、七水硫酸镁、溶菌酶/消泡剂'}],
+  ['me-pha','pha-2'],
+  /* PHA-2 复用 PHA 应用 */
+  ['pha-2','co-pha-a1'],['pha-2','co-pha-a2'],['pha-2','co-pha-a3'],
+  ['pha-2','co-pha-a4'],['pha-2','co-pha-a5'],['pha-2','co-pha-a6'],
+
+  /* 甲醇支链 b：MTO → PPC */
+  ['meoh','me-1',{eq:'快速循环流化床、甲醇制烯烃流化床再生器', rg:'SAPO-34 分子筛'}],
+  ['me-1','prop'],
+  ['prop','po-1x',{eq:'立式管壳式固定床反应器', rg:'钛硅分子筛 TS-1、H₂O₂'}],
+  ['po-1x','epo'],
+  ['epo','co-po',{eq:'CO₂-PO 共聚高压磁力搅拌反应釜', rg:'双金属氰化物催化剂/DMC 催化剂'}],
+  ['co-po','ppc'],
+
+  /* PPC → 应用 */
+  ['ppc','co-ppc-a1'],['ppc','co-ppc-a2'],['ppc','co-ppc-a3'],
+  ['ppc','co-ppc-a4'],['ppc','co-ppc-a5'],['ppc','co-ppc-a6'],
+
+  /* 甲醇支链 c：银法→甲醛→液相羰基→MG-2→催化水解→GA-2 → 接入开环聚合 */
+  ['meoh','me-2',{eq:'银催化剂反应器、废热锅炉、脱醇塔', rg:'电解银网、阻聚剂'}],
+  ['me-2','fmd'],
+  ['fmd','fmd-1',{eq:'高压釜式或塔式反应器、闪蒸罐、精馏塔系列', rg:'合成气、浓硫酸/固体酸催化剂'}],
+  ['fmd-1','mg2'],
+  ['mg2','fmd-2',{eq:'水解反应釜、薄膜蒸发器、解聚反应器', rg:'锡类催化剂'}],
+  ['fmd-2','fmd-ga'],
+  ['fmd-ga','ua-2'],  /* GA-2 汇入开环聚合（与 DMO 路共享） */
+
+  /* 甲醇支链 d：Reppe → BYD → BDO-1 */
+  ['meoh','me-4',{eq:'炔化反应器', rg:'乙炔亚铜催化剂'}],
+  ['me-4','byd'],
+  ['byd','byd-1',{eq:'固定床加氢反应器', rg:'雷尼镍或负载型镍/铜催化剂'}],
+  ['byd-1','bdo2'],
+
+  /* ── BDO 下游：酯化反应 → PBS 类聚酯 ── */
+  ['bdo2','est'],['bdo3','est'],
+  ['aa2','est'],['pta2','est'],['dmc','est'],['dpc','est'],
+  ['est','pbs',{eq:'酯化反应釜、冷凝器、接收罐、缩聚反应釜', rg:'钛系酯化催化剂/锡系酯化催化剂/锑系催化剂、热稳定剂/抗降解剂/抗水解稳定剂'}],
+  ['est','pbat',{eq:'酯化反应釜、缩聚反应釜', rg:'对苯二甲酸(PTA)、己二酸(AA)、钛系酯化催化剂/锡系酯化催化剂'}],
+  ['est','pbsa',{eq:'酯化反应釜、缩聚反应釜', rg:'己二酸(AA)、钛系酯化催化剂、PBSA 专用复合催化体系'}],
+  ['est','pbsc',{eq:'酯化反应釜、缩聚反应釜', rg:'碳酸二甲酯(DMC)/碳酸二苯酯(DPC)、钛-稀土双金属催化剂'}],
+  ['est','pbst',{eq:'酯化反应釜、缩聚反应釜', rg:'对苯二甲酸(PTA)/丁二酸、钛系酯化催化剂'}],
+
+  /* PBS 类聚酯 → 应用 */
+  ['pbs','co-pbs-a1'],['pbs','co-pbs-a2'],['pbs','co-pbs-a3'],['pbs','co-pbs-a4'],
+  ['pbat','co-pbat-a1'],['pbat','co-pbat-a2'],['pbat','co-pbat-a3'],['pbat','co-pbat-a4'],
+  ['pbsa','co-pbsa-a1'],['pbsa','co-pbsa-a2'],['pbsa','co-pbsa-a3'],['pbsa','co-pbsa-a4'],
+  ['pbsc','co-pbsc-a1'],['pbsc','co-pbsc-a2'],['pbsc','co-pbsc-a3'],['pbsc','co-pbsc-a4'],
+  ['pbst','co-pbst-a1'],['pbst','co-pbst-a2'],['pbst','co-pbst-a3'],['pbst','co-pbst-a4'],
+
+  /* ── 煤热解→电石→乙炔→BDO-2 链 ── */
+  ['co2-2','coke2',{eq:'焦炉、干馏炉'}],
+  ['coke2','co2-3',{eq:'密闭式电石炉/全密闭矿热炉/电弧炉', rg:'石灰石'}],
+  ['co2-3','cac2'],
+  ['cac2','co2-4',{eq:'乙炔发生器'}],
+  ['co2-4','c2h2'],
+  ['c2h2','ac-1',{eq:'列管式固定床反应器', rg:'乙酸锌(Ⅱ)负载型催化剂、醋酸'}],
+  ['ac-1','vac'],
+  ['vac','ac-2',{eq:'加氢反应器、水解塔、多效精馏系统', rg:'钯/活性炭负载型加氢催化剂/铜铝系加氢催化剂'}],
+  ['ac-2','bdo3'],
+
+  /* ══ 石油链 ══ */
+  ['oil','oi-1',{eq:'常压塔、减压塔、加热炉、换热器'}],
+  ['oi-1','oi-p1'],
+  ['oi-1','oi-p2'],
+
+  /* 石油焦 → 部分氧化 → 合成气 (副产) */
+  ['oi-p1','oi-ox',{eq:'部分氧化反应器', rg:'氧气、蒸汽'}],
+  ['oi-ox','oi-syn'],
+
+  /* 石脑油 → 催化重整 → 重整油 → 芳烃抽提 */
+  ['oi-p2','oi-2',{eq:'固定床反应器/移动床反应器', rg:'高温蒸汽、结焦抑制剂'}],
+  ['oi-2','oi-p3'],
+  ['oi-p3','oi-3',{eq:'抽提塔、非芳烃水洗塔、苯塔、白土塔', rg:'单乙醇胺、环丁砜'}],
+
+  /* 芳烃抽提 → 上分支 (PBAT) */
+  ['oi-3','oi-p4'],
+  ['oi-p4','oi-4',{eq:'异构化反应器', rg:'MFI 结构分子筛、氢气'}],
+  ['oi-4','oi-px'],
+  ['oi-px','oi-5',{eq:'氧化反应器、加氢精制反应器', rg:'醋酸钴、醋酸锰、醋酸、促进剂'}],
+  ['oi-5','oi-pta'],
+  ['oi-pta','oi-6',{eq:'真空缩聚反应釜、串联的酯化反应釜', rg:'钛酸四丁酯或醋酸锑'}],
+  ['oi-6','oi-pbat'],
+  ['oi-pbat','oi-pbat-a1'],['oi-pbat','oi-pbat-a2'],['oi-pbat','oi-pbat-a3'],['oi-pbat','oi-pbat-a4'],
+
+  /* 芳烃抽提 → 下分支 (PCL/AA) */
+  ['oi-3','oi-7',{eq:'白土塔、苯塔', rg:'阻泡剂'}],
+  ['oi-7','oi-p5'],
+  ['oi-p5','oi-8',{eq:'进出口换热器、冷高分、循环氢压缩机', rg:'镍/钼/氧化铝催化剂、硫保护剂'}],
+  ['oi-8','oi-p6'],
+  ['oi-p6','oi-9',{eq:'液相氧化反应器、分离系统', rg:'环烷酸钴/硼酸'}],
+  ['oi-9','oi-ka'],
+
+  /* KA油 上支：硝酸氧化 → AA */
+  ['oi-ka','oi-10',{eq:'串联的氧化反应器、结晶器、离心机/过滤器、干燥机、氮氧化物吸收与硝酸回收系统', rg:'浓硝酸、铜-钒复合催化剂'}],
+  ['oi-10','oi-aa'],
+
+  /* KA油 下支：KA油脱氢→PCL */
+  ['oi-ka','oi-11',{eq:'环己醇脱氢反应器、精馏塔', rg:'负载型锌-钙氧化物催化剂/铜-镁催化剂'}],
+  ['oi-11','oi-p7'],
+  ['oi-p7','oi-12',{eq:'液相氧化反应釜、过氧化物配置与计量系统、精馏系统', rg:'有机酸/固体酸催化剂、稳定剂'}],
+  ['oi-12','oi-cl'],
+  ['oi-cl','oi-13',{eq:'带强力搅拌和夹套的聚合釜、高真空系统、单体回收冷凝器、水切切粒机、干燥机', rg:'辛酸亚锡/酶催化剂、引发剂、稳定剂、链终止剂'}],
+  ['oi-13','oi-pcl'],
+  ['oi-pcl','oi-pcl-a1'],['oi-pcl','oi-pcl-a2'],['oi-pcl','oi-pcl-a3'],['oi-pcl','oi-pcl-a4'],
+];
+
+/* 末端节点 → 应用（虚线指向） */
+const APP_FAN = [
+  /* 淀粉 → 应用（专属 st-app-* 在 L2 中维护） */
+  /* 纤维素 → 专属应用（紧邻每个产物） */
+  ['cl-p1','cell-app-1'],['cl-p1','cell-app-2'],['cl-p1','cell-app-3'],['cl-p1','cell-app-4'],
+  ['cl-p2','cell-app-5'],['cl-p2','cell-app-6'],['cl-p2','cell-app-7'],['cl-p2','cell-app-8'],
+  ['cl-p3','cell-app-9'],['cl-p3','cell-app-10'],['cl-p3','cell-app-11'],['cl-p3','cell-app-12'],
+  ['cl-p4','cell-app-13'],['cl-p4','cell-app-14'],['cl-p4','cell-app-15'],
+  ['cl-p5','cell-app-16'],['cl-p5','cell-app-17'],
+  /* 秸秆基/木聚糖基 PLA → 应用（虚线，复用 starch PLA apps） */
+  ['cl-pla','pla-app-1'],['cl-pla','pla-app-2'],['cl-pla','pla-app-3'],['cl-pla','pla-app-4'],['cl-pla','pla-app-5'],
+  /* 秸秆基/木聚糖羟基脂肪酸酯 PHA → 应用（虚线，复用 starch PHA apps） */
+  ['cl-pha','pha-app-1'],['cl-pha','pha-app-2'],['cl-pha','pha-app-3'],['cl-pha','pha-app-4'],['cl-pha','pha-app-5'],
+  /* 半纤维素 → 应用 */
+  /* 植物油脂、蛋白、胶体 → 应用 */
+  /* 动物蛋白 → 应用 */
+  /* 动物油脂 → 应用 */
+  /* 生物甲壳 → 应用 */
+  /* 石油基聚合物 → 应用（PGA/PHA/PPC/PBS 等已迁至专属应用，在 L2 中维护） */
+  /* 新增链路 → 应用（PEF→hc-app-12~15 在 L2 中维护） */
+];
+
+function initGraph2(){
+  const g = document.getElementById('graph2');
+  const svg = document.getElementById('svg2');
+
+  N2.forEach(nd => {
+    const el = document.createElement('div');
+    el.className = 'nd2 ' + nd.c + (nd.vert ? ' vert' : '');
+    el.textContent = nd.n;
+    el.style.left = nd.x + 'px';
+    el.style.top = nd.y + 'px';
+    if (nd.w) el.style.width = nd.w + 'px';
+    if (nd.h) el.style.height = nd.h + 'px';
+    if (nd.dashed) el.style.borderStyle = 'dashed';
+    el.dataset.id = nd.id;
+    el.dataset.name = nd.n;
+    el.title = nd.n + ' · 点击查看在产企业列表';
+    el.onclick = function(){ openChainCompList(this.dataset.id, this.dataset.name) };
+    g.appendChild(el);
+  });
+
+  // 用真实 bbox 画线，避免硬编码
+  const mp = {};
+  g.querySelectorAll('.nd2').forEach((el, i) => {
+    const nd = N2[i];
+    const r = el.getBoundingClientRect();
+    mp[nd.id] = {el, x: nd.x, y: nd.y, w: el.offsetWidth, h: el.offsetHeight, dashed: nd.dashed};
+  });
+
+  let p = '';
+  const labels = [];   // 待添加的边标签
+  const draw = (fi, ti, opts) => {
+    const f = mp[fi], t = mp[ti];
+    if (!f || !t) return;
+    opts = opts || {};
+    const x1 = f.x + f.w, y1 = f.y + f.h/2;
+    const x2 = t.x,        y2 = t.y + t.h/2;
+    const mx = (x1 + x2) / 2;
+    const isRed = opts.red || f.dashed || t.dashed;
+    const stroke = isRed ? '#e0463a' : 'rgba(110,120,135,.55)';
+    const dash = isRed ? ' stroke-dasharray="4 3"' : '';
+    const marker = isRed ? 'arr2r' : 'arr2';
+    if (Math.abs(y2 - y1) < 1) {
+      p += `<path d="M${x1},${y1} L${x2},${y2}" fill="none" stroke="${stroke}" stroke-width="1.1"${dash} marker-end="url(#${marker})"/>`;
+    } else {
+      p += `<path d="M${x1},${y1} L${mx},${y1} L${mx},${y2} L${x2},${y2}" fill="none" stroke="${stroke}" stroke-width="1.1"${dash} marker-end="url(#${marker})"/>`;
+    }
+    // 边标签：水平段中点上下放置
+    if (opts.eq || opts.rg) {
+      const lx = (x1 + x2) / 2;
+      const ly = Math.min(y1, y2) + Math.abs(y2 - y1)/2;
+      labels.push({x: lx, y: y1, eq: opts.eq, rg: opts.rg});
+    }
+  };
+  L2.forEach(link => {
+    const [f, t, opt] = link;
+    draw(f, t, opt);
+  });
+  // 应用扇形（虚线点状）
+  APP_FAN.forEach(([f, t]) => {
+    const a = mp[f], b = mp[t];
+    if (!a || !b) return;
+    const x1 = a.x + a.w, y1 = a.y + a.h/2;
+    const x2 = b.x,       y2 = b.y + b.h/2;
+    const mx = (x1 + x2) / 2;
+    p += `<path d="M${x1},${y1} L${mx},${y1} L${mx},${y2} L${x2},${y2}" fill="none" stroke="rgba(140,140,160,.3)" stroke-width=".8" stroke-dasharray="2 3"/>`;
+  });
+
+  svg.innerHTML = svg.querySelector('defs').outerHTML + p;
+
+  // 边标签 div
+  labels.forEach(l => {
+    const div = document.createElement('div');
+    div.className = 'eg-lbl';
+    let html = '';
+    if (l.eq) html += `<div class="eq">${l.eq}</div>`;
+    if (l.rg) html += `<div class="rg">${l.rg}</div>`;
+    div.innerHTML = html;
+    div.style.left = (l.x - 70) + 'px';
+    div.style.top = (l.y - 22) + 'px';
+    div.style.width = '140px';
+    g.appendChild(div);
+  });
+}
+
+/* ════════════════════════════════════════════════
+   图谱 3：淀粉链（从总图谱 N2/L2 抽取，坐标平移到画布左上角）
+════════════════════════════════════════════════ */
+const STARCH_IDS = new Set([
+  'starch',
+  'st-1','st-2',                                    // 工艺
+  'st-p1','st-p2',                                  // 中间产物
+  'st-tps0','st-tps','st-mix','st-tps2',            // TPS 链
+  'st-hyd','glcs','glcs-1','glcs-2',                // 糖化液 + 分支
+  'lac-m','lac-p','pla','st-pha',                   // 乳酸/PLA/PHA
+  'st-app-1','st-app-2','st-app-3','st-app-4','st-app-5',
+  'pla-app-1','pla-app-2','pla-app-3','pla-app-4','pla-app-5',
+  'pha-app-1','pha-app-2','pha-app-3','pha-app-4','pha-app-5'
+]);
+
+/* 屯河覆盖度初版分类（待业务部门校对）
+   strong = 现有强链｜extend = 上下游延链｜fill = 短板补链｜none = 暂不涉及 */
+const STARCH_COV = {
+  // 原料 / 上游处理 — 屯河非淀粉加工企业
+  'starch':'none', 'st-1':'none', 'st-2':'none',
+  'st-p1':'none', 'st-p2':'none', 'st-hyd':'none',
+  // 糖化 + 乳酸路线 — 屯河有相关化工基础，规划延伸
+  'glcs':'extend', 'glcs-1':'extend', 'lac-m':'extend',
+  'lac-p':'strong',          // 聚合反应 — 屯河 PLA/BDO 都用此工艺
+  'pla':'strong',            // PLA — 屯河核心产品
+  // TPS 改性链 — 改性下游延伸方向
+  'st-tps0':'extend', 'st-tps':'extend', 'st-mix':'extend', 'st-tps2':'extend',
+  // PHA 链 — 屯河当前无，行业短板需补
+  'glcs-2':'fill', 'st-pha':'fill',
+  // TPS 应用 — 屯河暂不延伸
+  'st-app-1':'none','st-app-2':'none','st-app-3':'none','st-app-4':'none','st-app-5':'none',
+  // PLA 应用 — 强链下游，延伸方向
+  'pla-app-1':'extend','pla-app-2':'extend','pla-app-3':'extend','pla-app-4':'extend','pla-app-5':'extend',
+  // PHA 应用 — 配套补链下游
+  'pha-app-1':'fill','pha-app-2':'fill','pha-app-3':'fill','pha-app-4':'fill','pha-app-5':'fill'
+};
+
+function initGraph3(){
+  const g = document.getElementById('graph3');
+  const svg = document.getElementById('svg3');
+  const DX = -300, DY = 30;  // 把 starch(320,130) 平移到 (20,160)，整链置于画布左上
+
+  // 节点
+  const ndList = [];
+  N2.forEach(nd => {
+    if (!STARCH_IDS.has(nd.id)) return;
+    const el = document.createElement('div');
+    const cov = STARCH_COV[nd.id] || 'none';
+    el.className = 'nd2 ' + nd.c + (nd.vert ? ' vert' : '') + ' cov-' + cov;
+    el.textContent = nd.n;
+    el.style.left = (nd.x + DX) + 'px';
+    el.style.top  = (nd.y + DY) + 'px';
+    if (nd.w) el.style.width = nd.w + 'px';
+    if (nd.h) el.style.height = nd.h + 'px';
+    if (nd.dashed) el.style.borderStyle = 'dashed';
+    el.dataset.id = nd.id;
+    el.dataset.name = nd.n;
+    const covLbl = {strong:'现有强链',extend:'上下游延链',fill:'短板补链',none:'暂不涉及'}[cov];
+    el.title = nd.n + ' · 屯河覆盖度：' + covLbl + ' · 点击查看在产企业列表';
+    el.onclick = function(){ openChainCompList(this.dataset.id, this.dataset.name) };
+    g.appendChild(el);
+    ndList.push(nd);
+  });
+
+  // bbox 映射（与 initGraph2 保持一致）
+  const mp = {};
+  g.querySelectorAll('.nd2').forEach((el, i) => {
+    const nd = ndList[i];
+    mp[nd.id] = {el, x: nd.x + DX, y: nd.y + DY, w: el.offsetWidth, h: el.offsetHeight, dashed: nd.dashed};
+  });
+
+  let p = '';
+  const labels = [];
+  const draw = (fi, ti, opts) => {
+    const f = mp[fi], t = mp[ti];
+    if (!f || !t) return;  // 不在 starch 集合的链接自动跳过
+    opts = opts || {};
+    const x1 = f.x + f.w, y1 = f.y + f.h/2;
+    const x2 = t.x,        y2 = t.y + t.h/2;
+    const mx = (x1 + x2) / 2;
+    const isRed = opts.red || f.dashed || t.dashed;
+    const stroke = isRed ? '#e0463a' : 'rgba(110,120,135,.55)';
+    const dash = isRed ? ' stroke-dasharray="4 3"' : '';
+    const marker = isRed ? 'arr3r' : 'arr3';
+    if (Math.abs(y2 - y1) < 1) {
+      p += `<path d="M${x1},${y1} L${x2},${y2}" fill="none" stroke="${stroke}" stroke-width="1.1"${dash} marker-end="url(#${marker})"/>`;
+    } else {
+      p += `<path d="M${x1},${y1} L${mx},${y1} L${mx},${y2} L${x2},${y2}" fill="none" stroke="${stroke}" stroke-width="1.1"${dash} marker-end="url(#${marker})"/>`;
+    }
+    if (opts.eq || opts.rg) {
+      labels.push({x: (x1 + x2) / 2, y: y1, eq: opts.eq, rg: opts.rg});
+    }
+  };
+  L2.forEach(link => {
+    const [f, t, opt] = link;
+    draw(f, t, opt);
+  });
+  APP_FAN.forEach(([f, t]) => {
+    const a = mp[f], b = mp[t];
+    if (!a || !b) return;
+    const x1 = a.x + a.w, y1 = a.y + a.h/2;
+    const x2 = b.x,       y2 = b.y + b.h/2;
+    const mx = (x1 + x2) / 2;
+    p += `<path d="M${x1},${y1} L${mx},${y1} L${mx},${y2} L${x2},${y2}" fill="none" stroke="rgba(140,140,160,.3)" stroke-width=".8" stroke-dasharray="2 3"/>`;
+  });
+  svg.innerHTML = svg.querySelector('defs').outerHTML + p;
+
+  // 边标签
+  labels.forEach(l => {
+    const div = document.createElement('div');
+    div.className = 'eg-lbl';
+    let html = '';
+    if (l.eq) html += `<div class="eq">${l.eq}</div>`;
+    if (l.rg) html += `<div class="rg">${l.rg}</div>`;
+    div.innerHTML = html;
+    div.style.left = (l.x - 70) + 'px';
+    div.style.top  = (l.y - 22) + 'px';
+    div.style.width = '140px';
+    g.appendChild(div);
+  });
+}
+
+</script>
