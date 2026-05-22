@@ -349,56 +349,21 @@ table.s-tbl tbody tr:hover{background:rgba(30,110,140,.22);box-shadow:inset 3px 
     </div>
   </div>
 
-  <!-- 视图 3：日用消费品产业链（按 2.日用消费品产业链图谱0325 重绘，支持缩放/拖拽 + 双视图） -->
-  <div class="view cov-active" id="view-daily" style="display:none">
-    <div class="graph2-wrap" id="graph3-wrap">
-      <div class="graph2 graph3 coverage-mode" id="graph3">
-        <svg id="svg3">
-          <defs>
-            <marker id="arr3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="4" markerHeight="4" orient="auto">
-              <path d="M0,0 L10,5 L0,10 Z" fill="rgba(180,180,180,.6)"/>
-            </marker>
-            <marker id="arr3r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="4" markerHeight="4" orient="auto">
-              <path d="M0,0 L10,5 L0,10 Z" fill="rgba(230,90,80,.7)"/>
-            </marker>
-          </defs>
-        </svg>
-      </div>
-      <!-- 视图模式切换 -->
-      <div class="view-toolbar">
-        <div class="vt-btn active" data-mode="coverage">屯河覆盖度视图</div>
-        <div class="vt-btn" data-mode="process">工艺视图</div>
-      </div>
-      <!-- 缩放/重置控件 -->
-      <div class="zoom-ctrl">
-        <div class="zb" id="g3ZoomIn" title="放大">＋</div>
-        <div class="zb zb-lbl" id="g3ZoomPct">100%</div>
-        <div class="zb" id="g3ZoomOut" title="缩小">−</div>
-        <div class="zb" id="g3ZoomFit" title="一屏适配 / 居中" style="font-size:14px">⊡</div>
-      </div>
-      <!-- 覆盖度图例（仅覆盖度视图显示） -->
-      <div class="legend-cov">
-        <div class="legend-cov-title">屯河覆盖度</div>
-        <div class="legend-cov-row"><span class="legend-cov-sw" style="background:linear-gradient(180deg,#a04a18,#bf5f22)"></span>现有强链</div>
-        <div class="legend-cov-row"><span class="legend-cov-sw" style="background:linear-gradient(180deg,#5d6a12,#788620)"></span>上下游延链</div>
-        <div class="legend-cov-row"><span class="legend-cov-sw" style="background:linear-gradient(180deg,#0f5e6d,#1a8090)"></span>短板补链</div>
-        <div class="legend-cov-row"><span class="legend-cov-sw" style="background:rgba(58,69,85,.55);border-color:rgba(94,106,122,.5)"></span>暂不涉及</div>
-      </div>
-    </div>
-    <!-- 图例（复用总图谱的图例） -->
-    <div class="legend2">
-      <div class="legend2-title">图标说明</div>
-      <div class="legend2-row"><span class="lgd lgd-gray"></span>原材料</div>
-      <div class="legend2-row"><span class="lgd lgd-blue"></span>一级工艺/路线</div>
-      <div class="legend2-row"><span class="lgd lgd-orange"></span>一级产品</div>
-      <div class="legend2-row"><span class="lgd lgd-yellow"></span>后续产品</div>
-      <div class="legend2-row"><span class="lgd lgd-green"></span>具体工艺</div>
-      <div class="legend2-row"><span class="lgd lgd-purple"></span>应用</div>
-      <div class="legend2-row legend2-note"><span class="lgd-line"></span>红色线表示尚未实现产业化</div>
-    </div>
+  <!-- 视图 3：日用消费品产业链 交互式图谱（iframe，与母婴同一风格） -->
+  <div class="view" id="view-daily" style="display:none">
+    <iframe id="dailyFrame" title="日用消费品产业链图谱"
+            style="flex:1;width:100%;height:100%;border:0;background:#0a1628;"
+            scrolling="auto"></iframe>
   </div>
 
-  <!-- 视图 4：其余 10 条产业链图谱图片预览 -->
+  <!-- 视图 4-a：母婴用品产业链 交互式图谱（iframe，大屏暗色风格） -->
+  <div class="view" id="view-mb" style="display:none">
+    <iframe id="mbFrame" title="母婴用品产业链图谱"
+            style="flex:1;width:100%;height:100%;border:0;background:#0a1628;"
+            scrolling="auto"></iframe>
+  </div>
+
+  <!-- 视图 4：其余 9 条产业链图谱图片预览 -->
   <div class="view" id="view-img" style="display:none">
     <div class="img-wrap" id="imgWrap">
       <div class="img-title" id="imgTitle"></div>
@@ -487,6 +452,14 @@ function genCompForNode(nodeId, nodeName){
   list.sort((a,b)=>b.cap-a.cap);
   return list;
 }
+
+// 接收 iframe 图谱（母婴/日用消费品）通过 postMessage 发来的节点点击
+window.addEventListener('message', function(ev){
+  const d = ev.data;
+  if (d && d.type === 'chain-comp-list' && d.nodeId) {
+    openChainCompList(d.nodeId, d.nodeName);
+  }
+});
 
 function openChainCompList(nodeId, nodeName){
   const list = genCompForNode(nodeId, nodeName);
@@ -884,7 +857,7 @@ window.addEventListener('resize', () => {
 /* 产业链切换 */
 const IMG_BASE = '../产业链图谱/汇报配套产业链图谱和产品文件0326/汇报配套产业链图谱和产品文件0326/1+11产业链图谱-图片/';
 const IMG_MAP = {
-  'img:mb':      {file:'3.母婴用品产业链0305.png',        title:'母婴用品产业链'},
+  // 'img:mb' 已切换为交互式图谱（参见 view-mb / mbFrame）
   'img:pack':    {file:'4.包装产业链0211.png',           title:'包装产业链'},
   'img:agri':    {file:'5.农业园艺产业链0325.png',        title:'农业园艺产业链'},
   'img:textile': {file:'6.纺织纤维与鞋服产业链0211.png',   title:'纺织纤维与鞋服产业链'},
@@ -901,11 +874,14 @@ document.getElementById('chain-select').addEventListener('change', e => {
   const vDeg  = document.getElementById('view-degradable');
   const vDly  = document.getElementById('view-daily');
   const vImg  = document.getElementById('view-img');
-  const isImg = v.indexOf('img:') === 0;
+  const vMb   = document.getElementById('view-mb');
+  const isMb  = (v === 'img:mb');
+  const isImg = (v.indexOf('img:') === 0) && !isMb;
   vOrig.style.display = (v === 'original')   ? '' : 'none';
   vDeg.style.display  = (v === 'degradable') ? '' : 'none';
   vDly.style.display  = (v === 'daily')      ? '' : 'none';
   vImg.style.display  = isImg                ? '' : 'none';
+  vMb.style.display   = isMb                 ? '' : 'none';
   if (v === 'original') {
     const g = document.getElementById('graph');
     g.querySelectorAll('.nd, .app-area').forEach(e => e.remove());
@@ -917,37 +893,25 @@ document.getElementById('chain-select').addEventListener('change', e => {
     if (!window._g2Inited) { initGraph2(); window._g2Inited = true; }
     g2ZP.setup(); g2ZP.fit();
   } else if (v === 'daily') {
-    if (!window._g3Inited) { initGraphDaily(); window._g3Inited = true; }
-    g3ZP.setup(); g3ZP.fit();
-    setupDailyViewToggle();
+    const fr = document.getElementById('dailyFrame');
+    const url = '../产业链图谱/汇报配套产业链图谱和产品文件0326/汇报配套产业链图谱和产品文件0326/日用消费品产业链图谱.html';
+    if (fr && !fr.dataset.loaded) { fr.src = url; fr.dataset.loaded = '1'; }
+    // iframe 由隐藏切到可见后，让图谱重新居中（首次也兜底，等加载完成后再发一次）
+    const sendFit = () => { try { fr.contentWindow.postMessage({type:'fit-view'}, '*'); } catch(e){} };
+    setTimeout(sendFit, 50);
+    fr.addEventListener('load', sendFit, { once:true });
+  } else if (isMb) {
+    const fr = document.getElementById('mbFrame');
+    const url = '../产业链图谱/汇报配套产业链图谱和产品文件0326/汇报配套产业链图谱和产品文件0326/母婴用品产业链图谱.html';
+    if (fr && !fr.dataset.loaded) { fr.src = url; fr.dataset.loaded = '1'; }
+    const sendFit = () => { try { fr.contentWindow.postMessage({type:'fit-view'}, '*'); } catch(e){} };
+    setTimeout(sendFit, 50);
+    fr.addEventListener('load', sendFit, { once:true });
   } else if (isImg) {
     const cfg = IMG_MAP[v];
     if (cfg) loadChainImg(IMG_BASE + cfg.file, cfg.title);
   }
 });
-
-/* 日用消费品产业链：工艺视图 / 屯河覆盖度视图 切换 */
-function setupDailyViewToggle(){
-  const tb = document.querySelector('#view-daily .view-toolbar');
-  if (!tb || tb.dataset.inited) return;
-  tb.dataset.inited = '1';
-  const g3 = document.getElementById('graph3');
-  const view = document.getElementById('view-daily');
-  tb.querySelectorAll('.vt-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      tb.querySelectorAll('.vt-btn').forEach(x => x.classList.remove('active'));
-      btn.classList.add('active');
-      const mode = btn.dataset.mode;
-      if (mode === 'coverage') {
-        g3.classList.add('coverage-mode');
-        view.classList.add('cov-active');
-      } else {
-        g3.classList.remove('coverage-mode');
-        view.classList.remove('cov-active');
-      }
-    });
-  });
-}
 
 /* 图片视图：缩放 + 拖拽 */
 const imgZP = (()=>{
@@ -1115,17 +1079,13 @@ function createZoomPan(opts){
   return { state, fit, zoomAt, setup };
 }
 
-// 总图谱（3800×11000）+ 淀粉链（2400×450）两套独立控制器
-// g2 用固定 60% 初始缩放，便于看清细节；g3 用整图 fit 居中
+// 总图谱（3800×11000）独立 zoom/pan 控制器
 const g2ZP = createZoomPan({wrapId:'graph2-wrap', graphId:'graph2', baseW:3800, baseH:11000,
   btnInId:'g2ZoomIn', btnOutId:'g2ZoomOut', btnFitId:'g2ZoomFit', pctId:'g2ZoomPct',
   min:0.05, max:3, initScale:0.6});
-const g3ZP = createZoomPan({wrapId:'graph3-wrap', graphId:'graph3', baseW:4000, baseH:2800,
-  btnInId:'g3ZoomIn', btnOutId:'g3ZoomOut', btnFitId:'g3ZoomFit', pctId:'g3ZoomPct', min:0.1, max:3});
 
 window.addEventListener('resize', () => {
   if (document.getElementById('view-degradable').style.display !== 'none') g2ZP.fit();
-  if (document.getElementById('view-daily'     ).style.display !== 'none') g3ZP.fit();
   if (document.getElementById('view-img'       ).style.display !== 'none') imgZP.fit();
 });
 
@@ -2315,432 +2275,5 @@ function initGraph2(){
   });
 }
 
-/* ════════════════════════════════════════════════
-   图谱 3：日用消费品产业链
-   依据 2.日用消费品产业链图谱0325.pdf 重绘
-   画布 2700 × 2300，支持滚轮缩放 + 拖拽平移 + 覆盖度/工艺双视图
-   节点配色沿用总图谱：
-     gray=原材料  blue=一级工艺/路线  orange=一级产品  yellow=后续产品  green=具体工艺  purple=应用
-   覆盖度：strong=现有强链  extend=上下游延链  fill=短板补链  none=暂不涉及
-════════════════════════════════════════════════ */
-const D_N = [
-  /* ── 原料 / 改性 ── */
-  {id:'d_root',  n:'可降解材料日用消费品', x:20,  y:900,  w:70,  h:480, c:'nd2-gray',   vert:true, cov:'strong'},
-  {id:'d_bio',   n:'生物可降解材料',       x:140, y:1100, w:120, h:60,  c:'nd2-blue',              cov:'strong'},
-  {id:'d_pbs',   n:'PBS（聚丁二酸丁二酯）',           x:290, y:1010, w:240, h:34, c:'nd2-orange', cov:'strong'},
-  {id:'d_pbat',  n:'PBAT（聚己二酸/对苯二甲酸丁二酯）', x:290, y:1054, w:300, h:34, c:'nd2-orange', cov:'strong'},
-  {id:'d_pla',   n:'PLA（聚乳酸）',                   x:290, y:1098, w:200, h:34, c:'nd2-orange', cov:'strong'},
-  {id:'d_pha',   n:'PHA（聚羟基脂肪酸酯）',           x:290, y:1142, w:230, h:34, c:'nd2-orange', cov:'fill'},
-  {id:'d_mod',   n:'共混改性 / 填充改性 / 交联改性 / 生物相容性改性', x:620, y:1080, w:270, h:50, c:'nd2-green', cov:'extend'},
-
-  /* ── 一级专用料/改性料（按工艺分组） ── */
-  /* 路线 1：纺丝路线（纺丝/纺布专用料 → 熔融纺丝 → 热轧水刺加固 → 无纺布/纤维） */
-  {id:'d_r1s',   n:'可降解纺丝专用料（食品接触级/医疗器械级/化妆品/个人护理级/通用卫生级/户外级）/可降解纺布专用料（食品接触级/医疗器械级/化妆品/个人护理级/通用卫生级/户外级）', x:930, y:265, w:440, h:120, c:'nd2-orange', cov:'extend'},
-  {id:'d_r1p',   n:'熔融纺丝 / 编织',                 x:1400, y:300, w:130, h:48, c:'nd2-blue',   cov:'extend'},
-  {id:'d_r1p2',  n:'热轧加固 / 水刺加固',             x:1560, y:300, w:150, h:48, c:'nd2-green',  cov:'extend'},
-  /* 路线 2：注塑路线 */
-  {id:'d_r2p',   n:'注塑成型 / 吸塑成型',             x:930, y:870, w:160, h:48, c:'nd2-blue',   cov:'strong'},
-  /* 路线 3：薄膜路线 */
-  {id:'d_r3s',   n:'可降解吹膜专用料 / 流延专用料（普通防护级/卫生用品级/食品接触级）/吹膜改性料/流延改性料', x:930, y:1230, w:440, h:80, c:'nd2-orange', cov:'strong'},
-  {id:'d_r3p',   n:'吹膜 / 流延',                     x:1400, y:1250, w:120, h:48, c:'nd2-blue',  cov:'strong'},
-  /* 路线 4：发泡路线 */
-  {id:'d_r4s',   n:'室内环保级可降解发泡专用料 / 挤出级专用料 / 改性料', x:930, y:1470, w:400, h:60, c:'nd2-orange', cov:'fill'},
-  {id:'d_r4p',   n:'发泡成型',                         x:1360, y:1475, w:110, h:48, c:'nd2-blue',  cov:'fill'},
-  /* 路线 5：涂覆路线 */
-  {id:'d_r5s',   n:'食品接触级可降解淋膜专用料',       x:930, y:1620, w:250, h:48, c:'nd2-orange', cov:'fill'},
-  {id:'d_r5p',   n:'涂覆',                             x:1210, y:1620, w:90,  h:48, c:'nd2-blue',  cov:'fill'},
-  {id:'d_r5o',   n:'淋膜纸卷',                         x:1330, y:1620, w:110, h:48, c:'nd2-yellow',cov:'fill'},
-
-  /* ── 路线 1：无纺布 + 纤维 子产品 ── */
-  {id:'d_p1a',   n:'可降解水刺无纺布无纺布（卫生用品级/医疗器械级/个人护理级/皮肤接触级）/可降解热风无纺布（卫生用品级/医疗器械级/个人护理级/皮肤接触级）/可降解热轧无纺布（卫生用品级/医疗器械级/个人护理级/皮肤接触级）', x:1750, y:60,  w:460, h:140, c:'nd2-yellow', cov:'strong'},
-  {id:'d_p1b',   n:'可降解水刺无纺布（清洁用品级/工业清洁级）', x:1750, y:200, w:320, h:58, c:'nd2-yellow', cov:'fill'},
-  {id:'d_p1c',   n:'淋膜可降解无纺布/涂层可降解无纺布/复合无纺布', x:1750, y:300, w:320, h:58, c:'nd2-yellow', cov:'extend'},
-  {id:'d_p1f',   n:'可降解纤维',                       x:1750, y:400, w:130, h:48, c:'nd2-yellow', cov:'extend'},
-  {id:'d_p1fa',  n:'可降解纤维（食品接触级/个人护理级）', x:1910, y:380, w:260, h:42, c:'nd2-yellow', cov:'extend'},
-  {id:'d_p1fb',  n:'皮肤接触级可降解纤维',             x:1910, y:430, w:200, h:42, c:'nd2-yellow', cov:'extend'},
-
-  /* ── 路线 1 应用类型 + 终端 ── */
-  {id:'d_a1a',   n:'一次性清洁/护理用品',              x:2510, y:301, w:160, h:42, c:'nd2-purple', cov:'strong'},
-  {id:'d_l1a1',  n:'湿巾',                              x:2700, y:229, w:90,  h:30, c:'nd2-purple', cov:'strong'},
-  {id:'d_l1a2',  n:'棉柔巾 / 一次性洗脸巾',            x:2700, y:267, w:180, h:30, c:'nd2-purple', cov:'strong'},
-  {id:'d_l1a3',  n:'卫生巾 / 护垫表层和背膜',          x:2700, y:305, w:180, h:30, c:'nd2-purple', cov:'strong'},
-  {id:'d_l1a4',  n:'棉签 / 棉棒',                      x:2700, y:343, w:110, h:30, c:'nd2-purple', cov:'strong'},
-  {id:'d_l1a5',  n:'可降解搓澡巾',                     x:2700, y:381, w:130, h:30, c:'nd2-purple', cov:'strong'},
-  {id:'d_a1e',   n:'美容美妆',                          x:2510, y:512, w:100, h:42, c:'nd2-purple', cov:'extend'},
-  {id:'d_l1e0',  n:'面膜基布',                          x:2700, y:440, w:90,  h:30, c:'nd2-purple', cov:'extend'},
-  {id:'d_l1e1',  n:'化妆棉',                            x:2700, y:478, w:80,  h:30, c:'nd2-purple', cov:'extend'},
-  {id:'d_l1e2',  n:'卸妆棉',                            x:2700, y:516, w:80,  h:30, c:'nd2-purple', cov:'extend'},
-  {id:'d_l1e3',  n:'粉扑',                              x:2700, y:554, w:70,  h:30, c:'nd2-purple', cov:'extend'},
-  {id:'d_l1e4',  n:'化妆刷',                            x:2700, y:592, w:80,  h:30, c:'nd2-purple', cov:'extend'},
-  {id:'d_a1b',   n:'一次性清洁/护理用品',              x:2150, y:660, w:160, h:42, c:'nd2-purple', cov:'fill'},
-  {id:'d_l1b1',  n:'一次性拖把布、除尘布',             x:2340, y:660, w:160, h:42, c:'nd2-purple', cov:'fill'},
-  {id:'d_a1c',   n:'户外用品',                          x:2510, y:1186, w:100, h:42, c:'nd2-purple', cov:'extend'},
-  {id:'d_l1c1',  n:'睡袋内胆',                          x:2700, y:1169, w:90,  h:30, c:'nd2-purple', cov:'extend'},
-  {id:'d_l1c2',  n:'速干毛巾',                          x:2700, y:1207, w:90,  h:30, c:'nd2-purple', cov:'extend'},
-  {id:'d_l1c3',  n:'装备保护套',                        x:2700, y:1245, w:110, h:30, c:'nd2-purple', cov:'extend'},
-  {id:'d_a1d',   n:'一次性清洁/护理用品',              x:2210, y:855, w:160, h:42, c:'nd2-purple', cov:'extend'},
-  {id:'d_l1d1',  n:'可降解牙刷',                        x:2410, y:840, w:110, h:34, c:'nd2-purple', cov:'extend'},
-  {id:'d_l1d2',  n:'牙线',                              x:2410, y:878, w:70,  h:34, c:'nd2-purple', cov:'extend'},
-
-  /* ── 路线 2：注塑路线 子产品 ── */
-  {id:'d_p2a',   n:'可降解注塑专用料（皮肤接触级/室内环保级）/可降解注塑改性料', x:1130, y:620, w:380, h:74, c:'nd2-orange', cov:'extend'},
-  {id:'d_p2b',   n:'食品接触级可降解注塑专用料 / 食品接触级可降解注塑改性料',     x:1130, y:720, w:380, h:60, c:'nd2-orange', cov:'strong'},
-  {id:'d_p2c',   n:'地垫片材 / 地垫卷材 / 地垫坯件',   x:1130, y:800, w:220, h:42, c:'nd2-orange', cov:'extend'},
-  {id:'d_p2c1',  n:'食品接触级地垫片材 / 卷材 / 坯件', x:1370, y:780, w:240, h:42, c:'nd2-yellow', cov:'extend'},
-  {id:'d_p2c2',  n:'室内环保级地垫片材 / 卷材 / 坯件', x:1370, y:826, w:240, h:42, c:'nd2-yellow', cov:'extend'},
-  {id:'d_p2d',   n:'可降解注塑专用料（个人护理级/通用卫生级/皮肤接触级/安全环保级）/改性料', x:1130, y:890, w:400, h:74, c:'nd2-orange', cov:'extend'},
-  {id:'d_p2e',   n:'耐用性可降解注塑专用料 / 耐用性可降解注塑改性料', x:1130, y:980, w:340, h:60, c:'nd2-orange', cov:'fill'},
-  {id:'d_p2f',   n:'可降解注塑专用料（食品接触级/安全环保级）/改性料（食品接触级/安全环保级）', x:1130, y:1060, w:400, h:74, c:'nd2-orange', cov:'strong'},
-
-  /* ── 路线 2 应用类型 + 终端 ── */
-  {id:'d_a2a',   n:'餐饮具',                           x:1750, y:735, w:90,  h:42, c:'nd2-purple', cov:'strong'},
-  {id:'d_l2a1',  n:'吸管',                             x:1870, y:680, w:70,  h:34, c:'nd2-purple', cov:'strong'},
-  {id:'d_l2a2',  n:'刀叉勺',                           x:1870, y:720, w:80,  h:34, c:'nd2-purple', cov:'strong'},
-  {id:'d_l2a3',  n:'餐盒 / 便当盒 / 餐盘',             x:1870, y:760, w:170, h:34, c:'nd2-purple', cov:'strong'},
-
-  {id:'d_a2d',   n:'一次性清洁/护理用品',              x:1750, y:910, w:160, h:42, c:'nd2-purple', cov:'extend'},
-  {id:'d_l2d1',  n:'梳子',                             x:1940, y:870, w:70,  h:34, c:'nd2-purple', cov:'extend'},
-  {id:'d_l2d2',  n:'剃须刀柄',                         x:1940, y:908, w:90,  h:34, c:'nd2-purple', cov:'extend'},
-  {id:'d_l2d3',  n:'皂盒',                             x:1940, y:946, w:70,  h:34, c:'nd2-purple', cov:'extend'},
-  {id:'d_l2d4',  n:'马桶垫',                           x:1940, y:984, w:80,  h:34, c:'nd2-purple', cov:'extend'},
-
-  {id:'d_a2e',   n:'户外用品',                         x:2510, y:1281, w:100, h:42, c:'nd2-purple', cov:'fill'},
-  {id:'d_l2e1',  n:'标识牌 / 警示带',                  x:2700, y:1283, w:140, h:30, c:'nd2-purple', cov:'fill'},
-  {id:'d_l2e2',  n:'露营灯外壳',                       x:2700, y:1321, w:120, h:30, c:'nd2-purple', cov:'fill'},
-
-  {id:'d_a2f',   n:'家居',                             x:2510, y:1796, w:100, h:42, c:'nd2-purple', cov:'strong'},
-  {id:'d_l2f1',  n:'收纳盒 / 整理箱',                   x:2700, y:1749, w:130, h:30, c:'nd2-purple', cov:'strong'},
-  {id:'d_l2f2',  n:'座椅',                              x:2700, y:1789, w:60,  h:30, c:'nd2-purple', cov:'strong'},
-  {id:'d_l2f3',  n:'装饰摆件',                          x:2700, y:1829, w:100, h:30, c:'nd2-purple', cov:'strong'},
-  {id:'d_l2f4',  n:'灯罩',                              x:2700, y:1869, w:60,  h:30, c:'nd2-purple', cov:'strong'},
-
-  {id:'d_a2g',   n:'文具',                             x:2510, y:2394, w:100, h:42, c:'nd2-purple', cov:'extend'},
-  {id:'d_l2g1',  n:'笔 / 笔记本 / 文件夹',             x:2700, y:2381, w:170, h:30, c:'nd2-purple', cov:'extend'},
-  {id:'d_l2g2',  n:'文具收纳盒',                       x:2700, y:2419, w:130, h:30, c:'nd2-purple', cov:'extend'},
-
-  /* ── 路线 3：薄膜 子产品 + 应用 ── */
-  {id:'d_p3',    n:'普通防护级 / 卫生用品级 / 食品接触级 可降解薄膜', x:1550, y:1230, w:350, h:60, c:'nd2-yellow', cov:'strong'},
-  {id:'d_a3a',   n:'家居',                             x:2510, y:1928, w:100, h:42, c:'nd2-purple', cov:'strong'},
-  {id:'d_l3a1',  n:'布艺收纳袋 / 挂袋',                 x:2700, y:1909, w:160, h:30, c:'nd2-purple', cov:'strong'},
-  {id:'d_l3a2',  n:'真空压缩袋',                        x:2700, y:1949, w:110, h:30, c:'nd2-purple', cov:'strong'},
-  {id:'d_l3a3',  n:'一次性桌布',                        x:2700, y:1989, w:110, h:30, c:'nd2-purple', cov:'strong'},
-  {id:'d_a3b',   n:'一次性清洁/护理用品',              x:1930, y:1280, w:160, h:42, c:'nd2-purple', cov:'fill'},
-  {id:'d_l3b1',  n:'留香珠包膜',                        x:2110, y:1268, w:110, h:34, c:'nd2-purple', cov:'fill'},
-  {id:'d_l3b2',  n:'一次性雨衣',                        x:2230, y:1268, w:110, h:34, c:'nd2-purple', cov:'fill'},
-  {id:'d_l3b3',  n:'一次性手套',                        x:2110, y:1306, w:110, h:34, c:'nd2-purple', cov:'fill'},
-
-  /* ── 路线 4：发泡 子产品 + 应用 ── */
-  {id:'d_p4',    n:'室内环保级可降解发泡片材',         x:1490, y:1475, w:240, h:48, c:'nd2-yellow', cov:'fill'},
-  {id:'d_a4',    n:'家居',                             x:2510, y:2023, w:100, h:42, c:'nd2-purple', cov:'fill'},
-  {id:'d_l4',    n:'家具填充物',                       x:2700, y:2029, w:130, h:30, c:'nd2-purple', cov:'fill'},
-
-  /* ── 路线 5：涂覆 应用 ── */
-  {id:'d_a5',    n:'家居',                             x:2510, y:2063, w:100, h:42, c:'nd2-purple', cov:'fill'},
-  {id:'d_l5',    n:'一次性水杯 / 防油纸杯',             x:2700, y:2069, w:170, h:30, c:'nd2-purple', cov:'fill'},
-
-  /* ══════════════════════════════════════════════════════
-     销售应用 ── 按 PDF：每个 cluster 左侧 5 产品 +「}」左向大括号 → 销售应用
-     C5 文具 单产品 不画大括号、用普通连线
-     画布：4000w × 2800h
-     局部产品 x=2700-2870 / 大括号 x=2880-3000 / 销售应用 hub x=3010 起
-     ══════════════════════════════════════════════════════ */
-
-  /* ─── Cluster 1：一次性清洁/护理用品 销售集群（5 局部产品已合并到 d_l1a1~d_l1a5）─── */
-  {id:'d_s1_sale', n:'销售应用',                       x:3010, y:290, w:120, h:60, c:'nd2-blue',   cov:'none'},
-  {id:'d_s1_on',   n:'线上渠道',                       x:3180, y:160, w:100, h:42, c:'nd2-orange', cov:'none'},
-  {id:'d_s1_on1',  n:'综合电商平台',                   x:3320, y:80,  w:130, h:32, c:'nd2-purple', cov:'none'},
-  {id:'d_s1_on2',  n:'电商直播',                       x:3320, y:116, w:110, h:32, c:'nd2-purple', cov:'none'},
-  {id:'d_s1_on3',  n:'跨境电商',                       x:3320, y:152, w:110, h:32, c:'nd2-purple', cov:'none'},
-  {id:'d_s1_on4',  n:'社区团购',                       x:3320, y:188, w:110, h:32, c:'nd2-purple', cov:'none'},
-  {id:'d_s1_on5',  n:'品牌自建官网 / 小程序',          x:3320, y:224, w:170, h:32, c:'nd2-purple', cov:'none'},
-  {id:'d_s1_on6',  n:'精品电商平台',                   x:3320, y:260, w:130, h:32, c:'nd2-purple', cov:'none'},
-  {id:'d_s1_off',  n:'线下渠道',                       x:3180, y:370, w:100, h:42, c:'nd2-orange', cov:'none'},
-  {id:'d_s1_off1', n:'大卖场 / 超市',                  x:3320, y:300, w:130, h:32, c:'nd2-purple', cov:'none'},
-  {id:'d_s1_off2', n:'连锁便利店',                     x:3320, y:336, w:130, h:32, c:'nd2-purple', cov:'none'},
-  {id:'d_s1_off3', n:'家居生活用品店',                 x:3320, y:372, w:150, h:32, c:'nd2-purple', cov:'none'},
-  {id:'d_s1_off4', n:'医药 / 母婴连锁店',              x:3320, y:408, w:160, h:32, c:'nd2-purple', cov:'none'},
-  {id:'d_s1_off5', n:'酒店 / 餐饮',                    x:3320, y:444, w:110, h:32, c:'nd2-purple', cov:'none'},
-  {id:'d_s1_sp',   n:'特殊渠道',                       x:3180, y:500, w:100, h:42, c:'nd2-orange', cov:'none'},
-  {id:'d_s1_g',    n:'政府采购',                       x:3320, y:484, w:100, h:32, c:'nd2-purple', cov:'none'},
-  {id:'d_s1_b',    n:'企业定制',                       x:3320, y:520, w:100, h:32, c:'nd2-purple', cov:'none'},
-  {id:'d_s1_b1',   n:'酒店 / 航空',                    x:3460, y:484, w:110, h:32, c:'nd2-purple', cov:'none'},
-  {id:'d_s1_b2',   n:'礼品公司',                       x:3460, y:520, w:100, h:32, c:'nd2-purple', cov:'none'},
-  {id:'d_s1_b3',   n:'银行',                           x:3600, y:484, w:70,  h:32, c:'nd2-purple', cov:'none'},
-  {id:'d_s1_b4',   n:'电信运营商',                     x:3600, y:520, w:110, h:32, c:'nd2-purple', cov:'none'},
-
-  /* ─── Cluster 2：美容美妆 销售集群（5 局部产品已合并到 d_l1e0~d_l1e4）─── */
-  {id:'d_s2_sale', n:'销售应用',                       x:3010, y:750, w:120, h:60, c:'nd2-blue',   cov:'none'},
-  {id:'d_s2_on',   n:'线上渠道',                       x:3180, y:720, w:100, h:42, c:'nd2-orange', cov:'none'},
-  {id:'d_s2_on1',  n:'电商直播',                       x:3320, y:652, w:110, h:32, c:'nd2-purple', cov:'none'},
-  {id:'d_s2_on2',  n:'社区团购',                       x:3320, y:688, w:110, h:32, c:'nd2-purple', cov:'none'},
-  {id:'d_s2_on3',  n:'品牌自建官网 / 小程序',          x:3320, y:724, w:170, h:32, c:'nd2-purple', cov:'none'},
-  {id:'d_s2_on4',  n:'内容平台',                       x:3320, y:760, w:110, h:32, c:'nd2-purple', cov:'none'},
-  {id:'d_s2_on5',  n:'精品电商平台',                   x:3320, y:796, w:130, h:32, c:'nd2-purple', cov:'none'},
-  {id:'d_s2_off',  n:'线下渠道',                       x:3180, y:900, w:100, h:42, c:'nd2-orange', cov:'none'},
-  {id:'d_s2_off1', n:'百货公司',                       x:3320, y:836, w:100, h:32, c:'nd2-purple', cov:'none'},
-  {id:'d_s2_off2', n:'化妆品集合店',                   x:3320, y:872, w:140, h:32, c:'nd2-purple', cov:'none'},
-  {id:'d_s2_off3', n:'大卖场 / 超市',                  x:3320, y:908, w:130, h:32, c:'nd2-purple', cov:'none'},
-  {id:'d_s2_off4', n:'品牌线下门店',                   x:3320, y:944, w:130, h:32, c:'nd2-purple', cov:'none'},
-  {id:'d_s2_off5', n:'美容院 / 医美机构',              x:3320, y:980, w:160, h:32, c:'nd2-purple', cov:'none'},
-
-  /* ─── Cluster 3：户外用品 销售集群（5 局部产品已合并到 d_l1c1~3 + d_l2e1~2）─── */
-  {id:'d_s3_sale', n:'销售应用',                       x:3010, y:1230, w:120, h:60, c:'nd2-blue',   cov:'none'},
-  {id:'d_s3_on',   n:'线上渠道',                       x:3180, y:1140, w:100, h:42, c:'nd2-orange', cov:'none'},
-  {id:'d_s3_on1',  n:'综合电商平台',                   x:3320, y:1050, w:130, h:32, c:'nd2-purple', cov:'none'},
-  {id:'d_s3_on2',  n:'跨境电商',                       x:3320, y:1086, w:110, h:32, c:'nd2-purple', cov:'none'},
-  {id:'d_s3_on3',  n:'电商直播',                       x:3320, y:1122, w:110, h:32, c:'nd2-purple', cov:'none'},
-  {id:'d_s3_on4',  n:'社区团购',                       x:3320, y:1158, w:110, h:32, c:'nd2-purple', cov:'none'},
-  {id:'d_s3_on5',  n:'品牌自建官网 / 小程序',          x:3320, y:1194, w:170, h:32, c:'nd2-purple', cov:'none'},
-  {id:'d_s3_on6',  n:'内容平台',                       x:3320, y:1230, w:110, h:32, c:'nd2-purple', cov:'none'},
-  {id:'d_s3_on7',  n:'精品电商平台',                   x:3320, y:1266, w:130, h:32, c:'nd2-purple', cov:'none'},
-  {id:'d_s3_off',  n:'线下渠道',                       x:3180, y:1410, w:100, h:42, c:'nd2-orange', cov:'none'},
-  {id:'d_s3_off1', n:'运动产品集合店',                 x:3320, y:1306, w:150, h:32, c:'nd2-purple', cov:'none'},
-  {id:'d_s3_off2', n:'大卖场 / 超市',                  x:3320, y:1342, w:130, h:32, c:'nd2-purple', cov:'none'},
-  {id:'d_s3_off3', n:'品牌线下门店',                   x:3320, y:1378, w:130, h:32, c:'nd2-purple', cov:'none'},
-  {id:'d_s3_off4', n:'景区商店',                       x:3320, y:1414, w:110, h:32, c:'nd2-purple', cov:'none'},
-  {id:'d_s3_off5', n:'运动场所',                       x:3320, y:1450, w:110, h:32, c:'nd2-purple', cov:'none'},
-  {id:'d_s3_off6', n:'露营市集',                       x:3320, y:1486, w:110, h:32, c:'nd2-purple', cov:'none'},
-  {id:'d_s3_off7', n:'户外专业装备店',                 x:3320, y:1522, w:150, h:32, c:'nd2-purple', cov:'none'},
-  {id:'d_s3_sp',   n:'特殊渠道',                       x:3180, y:1620, w:100, h:42, c:'nd2-orange', cov:'none'},
-  {id:'d_s3_g',    n:'政府采购',                       x:3320, y:1590, w:100, h:32, c:'nd2-purple', cov:'none'},
-  {id:'d_s3_g1',   n:'应急物资',                       x:3460, y:1574, w:100, h:32, c:'nd2-purple', cov:'none'},
-  {id:'d_s3_g2',   n:'学校采购',                       x:3460, y:1610, w:100, h:32, c:'nd2-purple', cov:'none'},
-  {id:'d_s3_b',    n:'企业定制',                       x:3320, y:1646, w:100, h:32, c:'nd2-purple', cov:'none'},
-  {id:'d_s3_b1',   n:'酒店 / 航空',                    x:3460, y:1646, w:110, h:32, c:'nd2-purple', cov:'none'},
-  {id:'d_s3_b2',   n:'礼品公司',                       x:3460, y:1682, w:100, h:32, c:'nd2-purple', cov:'none'},
-  {id:'d_s3_b3',   n:'银行',                           x:3600, y:1646, w:70,  h:32, c:'nd2-purple', cov:'none'},
-  {id:'d_s3_b4',   n:'电信运营商',                     x:3600, y:1682, w:110, h:32, c:'nd2-purple', cov:'none'},
-
-  /* ─── Cluster 4：家居 销售集群（9 局部产品已合并到 d_l2f1~4 + d_l3a1~3 + d_l4 + d_l5）─── */
-  {id:'d_s4_sale', n:'销售应用',                       x:3010, y:1890, w:120, h:60, c:'nd2-blue',   cov:'none'},
-  {id:'d_s4_on',   n:'线上渠道',                       x:3180, y:1830, w:100, h:42, c:'nd2-orange', cov:'none'},
-  {id:'d_s4_on1',  n:'综合电商平台',                   x:3320, y:1750, w:130, h:32, c:'nd2-purple', cov:'none'},
-  {id:'d_s4_on2',  n:'电商直播',                       x:3320, y:1786, w:110, h:32, c:'nd2-purple', cov:'none'},
-  {id:'d_s4_on3',  n:'跨境电商',                       x:3320, y:1822, w:110, h:32, c:'nd2-purple', cov:'none'},
-  {id:'d_s4_on4',  n:'社区团购',                       x:3320, y:1858, w:110, h:32, c:'nd2-purple', cov:'none'},
-  {id:'d_s4_on5',  n:'品牌自建官网 / 小程序',          x:3320, y:1894, w:170, h:32, c:'nd2-purple', cov:'none'},
-  {id:'d_s4_on6',  n:'精品电商平台',                   x:3320, y:1930, w:130, h:32, c:'nd2-purple', cov:'none'},
-  {id:'d_s4_off',  n:'线下渠道',                       x:3180, y:2020, w:100, h:42, c:'nd2-orange', cov:'none'},
-  {id:'d_s4_off1', n:'大型家具超市',                   x:3320, y:1966, w:140, h:32, c:'nd2-purple', cov:'none'},
-  {id:'d_s4_off2', n:'文创商店',                       x:3320, y:2002, w:110, h:32, c:'nd2-purple', cov:'none'},
-  {id:'d_s4_off3', n:'建材卖场',                       x:3320, y:2038, w:110, h:32, c:'nd2-purple', cov:'none'},
-  {id:'d_s4_off4', n:'本地家具厂',                     x:3320, y:2074, w:120, h:32, c:'nd2-purple', cov:'none'},
-  {id:'d_s4_sp',   n:'特殊渠道',                       x:3180, y:2130, w:100, h:42, c:'nd2-orange', cov:'none'},
-  {id:'d_s4_g',    n:'政府采购',                       x:3320, y:2130, w:100, h:32, c:'nd2-purple', cov:'none'},
-  {id:'d_s4_g1',   n:'医院采购',                       x:3460, y:2112, w:100, h:32, c:'nd2-purple', cov:'none'},
-  {id:'d_s4_g2',   n:'学校采购',                       x:3460, y:2148, w:100, h:32, c:'nd2-purple', cov:'none'},
-
-  /* ─── Cluster 5：文具（单源 d_a2g 普通连线，不画大括号） ─── */
-  {id:'d_s5_sale', n:'销售应用',                       x:3010, y:2370, w:120, h:60, c:'nd2-blue',   cov:'none'},
-  {id:'d_s5_on',   n:'线上渠道',                       x:3180, y:2290, w:100, h:42, c:'nd2-orange', cov:'none'},
-  {id:'d_s5_on1',  n:'综合电商平台',                   x:3320, y:2192, w:130, h:32, c:'nd2-purple', cov:'none'},
-  {id:'d_s5_on2',  n:'电商直播',                       x:3320, y:2228, w:110, h:32, c:'nd2-purple', cov:'none'},
-  {id:'d_s5_on3',  n:'跨境电商',                       x:3320, y:2264, w:110, h:32, c:'nd2-purple', cov:'none'},
-  {id:'d_s5_on4',  n:'社区团购',                       x:3320, y:2300, w:110, h:32, c:'nd2-purple', cov:'none'},
-  {id:'d_s5_on5',  n:'品牌自建官网 / 小程序',          x:3320, y:2336, w:170, h:32, c:'nd2-purple', cov:'none'},
-  {id:'d_s5_on6',  n:'精品电商平台',                   x:3320, y:2372, w:130, h:32, c:'nd2-purple', cov:'none'},
-  {id:'d_s5_off',  n:'线下渠道',                       x:3180, y:2500, w:100, h:42, c:'nd2-orange', cov:'none'},
-  {id:'d_s5_off1', n:'大卖场 / 超市',                  x:3320, y:2418, w:130, h:32, c:'nd2-purple', cov:'none'},
-  {id:'d_s5_off2', n:'连锁便利店',                     x:3320, y:2454, w:130, h:32, c:'nd2-purple', cov:'none'},
-  {id:'d_s5_off3', n:'文具连锁店',                     x:3320, y:2490, w:130, h:32, c:'nd2-purple', cov:'none'},
-  {id:'d_s5_off4', n:'文创商店',                       x:3320, y:2526, w:110, h:32, c:'nd2-purple', cov:'none'},
-  {id:'d_s5_off5', n:'书店',                           x:3320, y:2562, w:80,  h:32, c:'nd2-purple', cov:'none'},
-  {id:'d_s5_sp',   n:'特殊渠道',                       x:3180, y:2640, w:100, h:42, c:'nd2-orange', cov:'none'},
-  {id:'d_s5_g',    n:'政府采购',                       x:3320, y:2624, w:100, h:32, c:'nd2-purple', cov:'none'},
-  {id:'d_s5_g1',   n:'学校采购',                       x:3460, y:2624, w:100, h:32, c:'nd2-purple', cov:'none'},
-  {id:'d_s5_b',    n:'企业定制',                       x:3320, y:2680, w:100, h:32, c:'nd2-purple', cov:'none'},
-  {id:'d_s5_b1',   n:'酒店 / 航空',                    x:3460, y:2660, w:110, h:32, c:'nd2-purple', cov:'none'},
-  {id:'d_s5_b2',   n:'礼品公司',                       x:3460, y:2696, w:100, h:32, c:'nd2-purple', cov:'none'},
-  {id:'d_s5_b3',   n:'银行',                           x:3600, y:2660, w:70,  h:32, c:'nd2-purple', cov:'none'},
-  {id:'d_s5_b4',   n:'电信运营商',                     x:3600, y:2696, w:110, h:32, c:'nd2-purple', cov:'none'},
-];
-
-const D_L = [
-  /* root → 生物可降解材料 */
-  ['d_root','d_bio'],
-  /* 生物可降解材料 → PBS/PBAT/PLA/PHA */
-  ['d_bio','d_pbs'],['d_bio','d_pbat'],['d_bio','d_pla'],['d_bio','d_pha'],
-  /* 聚合物 → 改性 */
-  ['d_pbs','d_mod'],['d_pbat','d_mod'],['d_pla','d_mod'],['d_pha','d_mod'],
-  /* 改性 → 路线分支 */
-  ['d_mod','d_r1s'],['d_mod','d_r2p'],['d_mod','d_r3s'],['d_mod','d_r4s'],['d_mod','d_r5s'],
-
-  /* 路线 1：纺丝路线主线 */
-  ['d_r1s','d_r1p'],['d_r1p','d_r1p2'],
-  ['d_r1p2','d_p1a'],['d_r1p2','d_p1b'],['d_r1p2','d_p1c'],
-  ['d_r1p','d_p1f'],
-  ['d_p1f','d_p1fa'],['d_p1f','d_p1fb'],
-
-  /* 路线 1 应用 — PDF: d_p1a 大节点 同时连 一次性清洁/护理用品 + 美容美妆 */
-  ['d_p1a','d_a1a'],['d_p1a','d_a1e'],
-  ['d_a1a','d_l1a1'],['d_a1a','d_l1a2'],['d_a1a','d_l1a3'],['d_a1a','d_l1a4'],['d_a1a','d_l1a5'],
-  ['d_p1b','d_a1b'],['d_a1b','d_l1b1'],
-  ['d_p1c','d_a1c'],['d_a1c','d_l1c1'],['d_a1c','d_l1c2'],['d_a1c','d_l1c3'],
-  ['d_p1fa','d_a1d'],['d_a1d','d_l1d1'],['d_a1d','d_l1d2'],
-  ['d_p1fb','d_a1e'],['d_a1e','d_l1e0'],['d_a1e','d_l1e1'],['d_a1e','d_l1e2'],['d_a1e','d_l1e3'],['d_a1e','d_l1e4'],
-
-  /* 路线 2：注塑路线 — 改性后多支专用料 */
-  ['d_r2p','d_p2a'],['d_r2p','d_p2b'],['d_r2p','d_p2c'],['d_r2p','d_p2d'],['d_r2p','d_p2e'],['d_r2p','d_p2f'],
-  ['d_p2c','d_p2c1'],['d_p2c','d_p2c2'],
-  ['d_p2b','d_a2a'],['d_a2a','d_l2a1'],['d_a2a','d_l2a2'],['d_a2a','d_l2a3'],
-  ['d_p2d','d_a2d'],['d_a2d','d_l2d1'],['d_a2d','d_l2d2'],['d_a2d','d_l2d3'],['d_a2d','d_l2d4'],
-  ['d_p2e','d_a2e'],['d_a2e','d_l2e1'],['d_a2e','d_l2e2'],
-  ['d_p2f','d_a2f'],['d_a2f','d_l2f1'],['d_a2f','d_l2f2'],['d_a2f','d_l2f3'],['d_a2f','d_l2f4'],
-  ['d_p2f','d_a2g'],['d_a2g','d_l2g1'],['d_a2g','d_l2g2'],
-
-  /* 路线 3：薄膜路线 */
-  ['d_r3s','d_r3p'],['d_r3p','d_p3'],
-  ['d_p3','d_a3a'],['d_a3a','d_l3a1'],['d_a3a','d_l3a2'],['d_a3a','d_l3a3'],
-  ['d_p3','d_a3b'],['d_a3b','d_l3b1'],['d_a3b','d_l3b2'],['d_a3b','d_l3b3'],
-
-  /* 路线 4：发泡路线 */
-  ['d_r4s','d_r4p'],['d_r4p','d_p4'],['d_p4','d_a4'],['d_a4','d_l4'],
-
-  /* 路线 5：涂覆路线 */
-  ['d_r5s','d_r5p'],['d_r5p','d_r5o'],['d_r5o','d_a5'],['d_a5','d_l5'],
-
-  /* ── 销售应用：C1-C4 局部产品 + }大括号 → 销售应用；C5 文具 d_a2g 普通连线 ── */
-  /* Cluster 1：5 局部产品（线由大括号绘制，不在 D_L 中） */
-  ['d_s1_sale','d_s1_on'],['d_s1_sale','d_s1_off'],['d_s1_sale','d_s1_sp'],
-  ['d_s1_on','d_s1_on1'],['d_s1_on','d_s1_on2'],['d_s1_on','d_s1_on3'],['d_s1_on','d_s1_on4'],['d_s1_on','d_s1_on5'],['d_s1_on','d_s1_on6'],
-  ['d_s1_off','d_s1_off1'],['d_s1_off','d_s1_off2'],['d_s1_off','d_s1_off3'],['d_s1_off','d_s1_off4'],['d_s1_off','d_s1_off5'],
-  ['d_s1_sp','d_s1_g'],['d_s1_sp','d_s1_b'],
-  ['d_s1_b','d_s1_b1'],['d_s1_b','d_s1_b2'],['d_s1_b','d_s1_b3'],['d_s1_b','d_s1_b4'],
-  /* Cluster 2 */
-  ['d_s2_sale','d_s2_on'],['d_s2_sale','d_s2_off'],
-  ['d_s2_on','d_s2_on1'],['d_s2_on','d_s2_on2'],['d_s2_on','d_s2_on3'],['d_s2_on','d_s2_on4'],['d_s2_on','d_s2_on5'],
-  ['d_s2_off','d_s2_off1'],['d_s2_off','d_s2_off2'],['d_s2_off','d_s2_off3'],['d_s2_off','d_s2_off4'],['d_s2_off','d_s2_off5'],
-  /* Cluster 3 */
-  ['d_s3_sale','d_s3_on'],['d_s3_sale','d_s3_off'],['d_s3_sale','d_s3_sp'],
-  ['d_s3_on','d_s3_on1'],['d_s3_on','d_s3_on2'],['d_s3_on','d_s3_on3'],['d_s3_on','d_s3_on4'],['d_s3_on','d_s3_on5'],['d_s3_on','d_s3_on6'],['d_s3_on','d_s3_on7'],
-  ['d_s3_off','d_s3_off1'],['d_s3_off','d_s3_off2'],['d_s3_off','d_s3_off3'],['d_s3_off','d_s3_off4'],['d_s3_off','d_s3_off5'],['d_s3_off','d_s3_off6'],['d_s3_off','d_s3_off7'],
-  ['d_s3_sp','d_s3_g'],['d_s3_sp','d_s3_b'],
-  ['d_s3_g','d_s3_g1'],['d_s3_g','d_s3_g2'],
-  ['d_s3_b','d_s3_b1'],['d_s3_b','d_s3_b2'],['d_s3_b','d_s3_b3'],['d_s3_b','d_s3_b4'],
-  /* Cluster 4 */
-  ['d_s4_sale','d_s4_on'],['d_s4_sale','d_s4_off'],['d_s4_sale','d_s4_sp'],
-  ['d_s4_on','d_s4_on1'],['d_s4_on','d_s4_on2'],['d_s4_on','d_s4_on3'],['d_s4_on','d_s4_on4'],['d_s4_on','d_s4_on5'],['d_s4_on','d_s4_on6'],
-  ['d_s4_off','d_s4_off1'],['d_s4_off','d_s4_off2'],['d_s4_off','d_s4_off3'],['d_s4_off','d_s4_off4'],
-  ['d_s4_sp','d_s4_g'],['d_s4_g','d_s4_g1'],['d_s4_g','d_s4_g2'],
-  /* Cluster 5：文具（d_l2g1/d_l2g2 → } 大括号 → 销售应用） */
-  ['d_s5_sale','d_s5_on'],['d_s5_sale','d_s5_off'],['d_s5_sale','d_s5_sp'],
-  ['d_s5_on','d_s5_on1'],['d_s5_on','d_s5_on2'],['d_s5_on','d_s5_on3'],['d_s5_on','d_s5_on4'],['d_s5_on','d_s5_on5'],['d_s5_on','d_s5_on6'],
-  ['d_s5_off','d_s5_off1'],['d_s5_off','d_s5_off2'],['d_s5_off','d_s5_off3'],['d_s5_off','d_s5_off4'],['d_s5_off','d_s5_off5'],
-  ['d_s5_sp','d_s5_g'],['d_s5_sp','d_s5_b'],
-  ['d_s5_g','d_s5_g1'],
-  ['d_s5_b','d_s5_b1'],['d_s5_b','d_s5_b2'],['d_s5_b','d_s5_b3'],['d_s5_b','d_s5_b4'],
-];
-
-function initGraphDaily(){
-  const g = document.getElementById('graph3');
-  const svg = document.getElementById('svg3');
-
-  // 节点
-  const ndList = [];
-  D_N.forEach(nd => {
-    const el = document.createElement('div');
-    const cov = nd.cov || 'none';
-    el.className = 'nd2 ' + nd.c + (nd.vert ? ' vert' : '') + ' cov-' + cov;
-    el.textContent = nd.n;
-    el.style.left = nd.x + 'px';
-    el.style.top  = nd.y + 'px';
-    if (nd.w) el.style.width = nd.w + 'px';
-    if (nd.h) el.style.height = nd.h + 'px';
-    // 超长标签自动换行
-    if (nd.n.length > 18 || (nd.h && nd.h > 50)) {
-      el.style.whiteSpace = 'normal';
-      el.style.fontSize = '10px';
-      el.style.lineHeight = '1.3';
-      el.style.padding = '4px 6px';
-    }
-    el.dataset.id = nd.id;
-    el.dataset.name = nd.n;
-    const covLbl = {strong:'现有强链',extend:'上下游延链',fill:'短板补链',none:'暂不涉及'}[cov];
-    el.title = nd.n + ' · 屯河覆盖度：' + covLbl + ' · 点击查看在产企业列表';
-    el.onclick = function(){ openChainCompList(this.dataset.id, this.dataset.name) };
-    g.appendChild(el);
-    ndList.push(nd);
-  });
-
-  // bbox 映射（节点实际渲染后的尺寸）
-  const mp = {};
-  g.querySelectorAll('.nd2').forEach((el, i) => {
-    const nd = ndList[i];
-    mp[nd.id] = {el, x: nd.x, y: nd.y, w: el.offsetWidth, h: el.offsetHeight};
-  });
-
-  let p = '';
-  const stroke = 'rgba(110,120,135,.55)';
-  const draw = (fi, ti) => {
-    const f = mp[fi], t = mp[ti];
-    if (!f || !t) return;
-    const x1 = f.x + f.w, y1 = f.y + f.h/2;
-    const x2 = t.x,        y2 = t.y + t.h/2;
-    const mx = (x1 + x2) / 2;
-    if (Math.abs(y2 - y1) < 1) {
-      p += `<path d="M${x1},${y1} L${x2},${y2}" fill="none" stroke="${stroke}" stroke-width="1.1" marker-end="url(#arr3)"/>`;
-    } else {
-      p += `<path d="M${x1},${y1} L${mx},${y1} L${mx},${y2} L${x2},${y2}" fill="none" stroke="${stroke}" stroke-width="1.1" marker-end="url(#arr3)"/>`;
-    }
-  };
-
-  // 销售应用前的左向大括号 } (C1-C4 局部产品 → 销售应用)，C5 文具走普通连线
-  const D_BRACES = [
-    {sources: ['d_l1a1','d_l1a2','d_l1a3','d_l1a4','d_l1a5'],       target: 'd_s1_sale'},
-    {sources: ['d_l1e0','d_l1e1','d_l1e2','d_l1e3','d_l1e4'],       target: 'd_s2_sale'},
-    {sources: ['d_l1c1','d_l1c2','d_l1c3','d_l2e1','d_l2e2'],       target: 'd_s3_sale'},
-    {sources: ['d_l2f1','d_l2f2','d_l2f3','d_l2f4','d_l3a1','d_l3a2','d_l3a3','d_l4','d_l5'], target: 'd_s4_sale'},
-    {sources: ['d_l2g1','d_l2g2'],                                  target: 'd_s5_sale'},
-  ];
-  const braceSkip = new Set();
-  D_BRACES.forEach(b => b.sources.forEach(s => braceSkip.add(s + '|' + b.target)));
-
-  D_L.forEach(link => {
-    if (braceSkip.has(link[0] + '|' + link[1])) return;
-    draw(link[0], link[1]);
-  });
-
-  // 渲染大括号
-  const braceStroke = 'rgba(160,180,200,.85)';
-  D_BRACES.forEach(brace => {
-    const target = mp[brace.target];
-    if (!target) return;
-    const pts = brace.sources.map(id => {
-      const n = mp[id];
-      return n ? {x: n.x + n.w, y: n.y + n.h/2} : null;
-    }).filter(Boolean);
-    if (!pts.length) return;
-
-    const targetX = target.x;
-    const targetY = target.y + target.h/2;
-    let yTop = Math.min(...pts.map(q => q.y));
-    let yBot = Math.max(...pts.map(q => q.y));
-    const ySrcMid = (yTop + yBot) / 2;
-    if (yBot - yTop < 30) { yTop = ySrcMid - 22; yBot = ySrcMid + 22; }
-    // bracket 的 yMid 跟源中心走（不绑定 target），peak 之后用 elbow 连到 target
-    const yMid = (yTop + yBot) / 2;
-    const xSpine = Math.max(...pts.map(q => q.x)) + 30;
-    const xPeak  = targetX - 8;
-
-    // 每个 source 到 spine 的细短横线
-    pts.forEach(pt => {
-      p += `<path d="M${pt.x},${pt.y} L${xSpine},${pt.y}" fill="none" stroke="${stroke}" stroke-width="1.0"/>`;
-    });
-    // }-形大括号：顶部竖线 + 90°转尖角 + 底部竖线（真正的 } 形状）
-    const radius = Math.min((yBot - yTop) * 0.25, (xPeak - xSpine) * 0.9, 28);
-    const yA = yMid - radius;
-    const yB = yMid + radius;
-    p += `<path d="M${xSpine},${yTop} L${xSpine},${yA} Q${xSpine},${yMid} ${xPeak},${yMid} Q${xSpine},${yMid} ${xSpine},${yB} L${xSpine},${yBot}" fill="none" stroke="${braceStroke}" stroke-width="1.6"/>`;
-    // tip → 销售应用（elbow 处理 yMid != targetY 的情形）
-    if (Math.abs(yMid - targetY) < 2) {
-      p += `<path d="M${xPeak},${yMid} L${targetX},${targetY}" fill="none" stroke="${stroke}" stroke-width="1.1" marker-end="url(#arr3)"/>`;
-    } else {
-      const tx = (xPeak + targetX) / 2;
-      p += `<path d="M${xPeak},${yMid} L${tx},${yMid} L${tx},${targetY} L${targetX},${targetY}" fill="none" stroke="${stroke}" stroke-width="1.1" marker-end="url(#arr3)"/>`;
-    }
-  });
-
-  svg.innerHTML = svg.querySelector('defs').outerHTML + p;
-}
 
 </script>
